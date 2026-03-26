@@ -1,0 +1,103 @@
+VC     <- LoopInvariant
+    / LoopVariant
+    / Writes
+    / Requires
+    / Ensures
+    / Assert
+    / Assume
+    / Frees
+
+LoopVariant   <- 'variant ' Expression
+LoopInvariant <- 'invariant ' Expression
+Writes        <- 'writes ' WriteableExpressionList / 'no_write'
+Requires      <- 'requires ' Expression
+Ensures       <- 'ensures ' Expression
+Assert        <- 'assert ' Expression
+Assume        <- 'assume ' Expression
+Frees         <- 'frees ' WriteableExpressionList / 'no_free'
+
+WriteableExpressionList <- WriteableExpression (',' WriteableExpression)*
+
+Expression <-
+      Expression^2 '=>' Expression^2
+    / Expression^2 '<->' Expression^2
+
+    / Expression^2 '/\\' Expression^3
+    / Expression^2 '\\/' Expression^3
+
+    / Expression^3 '>=' Expression^4
+    / Expression^3 '<=' Expression^4
+    / Expression^3 '>' Expression^4
+    / Expression^3 '<' !'->' Expression^4
+    / Expression^3 '==' Expression^4
+    / Expression^3 '!=' Expression^4
+
+    / Expression^4 '>>' Expression^5
+    / Expression^4 '<<' Expression^5
+
+    / Expression^5 '^' Expression^6
+    / Expression^5 '|' Expression^6
+    / Expression^5 '&' Expression^6
+
+    / Expression^6 '+' Expression^7
+    / Expression^6 '-' Expression^7
+
+    / Expression^7 '*' Expression^8
+    / Expression^7 '/' !'\\' Expression^8
+
+    / Atom
+
+Atom       <- Call
+    / WriteableExpression
+    / Prefix_Operator Atom
+    / '(' Expression ')'
+    / Literal
+    / Quantifier
+    / Result
+    / AddressOf
+    / Label
+
+Call  <- Identifier '(' ExpressionList ')'
+ExpressionList <- Expression (',' Expression)*
+
+Quantifier <- Quant VarList '.' Expression
+Quant      <- 'forall' / 'exists'
+VarList    <- VarDecl (',' VarDecl)*
+VarDecl    <- Identifier ':' Identifier
+
+Literal <- Boolean / Number / Builtin
+Boolean <- 'true' / 'false'
+Number <- [0-9]+
+
+Result <- 'result'
+
+AddressOf <- '&' WriteableExpression
+
+Label <- '@' Identifier
+
+WriteableExpression <- Index
+    / PointerDereference
+    / FieldReference
+    / FieldArrowReference
+    / Identifier
+PointerDereference  <- '*' WriteableExpression
+FieldReference      <- WriteableExpression '.' Identifier
+FieldArrowReference      <- WriteableExpression '->' Identifier
+
+Index      <- WriteableExpression '[' IndexRange ']'
+IndexRange <- Expression ('..' Expression)?
+
+Identifier <- !Keyword Name
+Keyword    <-
+    'true' / 'false' / 'result' / 'exists'
+    / 'forall' / 'variant' / 'invariant'
+    / 'writes' / 'requires' / 'ensures' / Builtin
+Builtin    <- 'min_sint8' / 'max_sint8' / 'min_uint8' / 'max_uint8'
+    / 'min_sint16' / 'max_sint16' / 'min_uint16' / 'max_uint16'
+    / 'min_sint32' / 'max_sint32' / 'min_uint32' / 'max_uint32'
+    / 'min_sint64' / 'max_sint64' / 'min_uint64' / 'max_uint64'
+
+Name   <- [A-Za-z_][A-Za-z0-9_]*
+
+Prefix_Operator <- [!-]
+

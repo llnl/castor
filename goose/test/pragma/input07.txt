@@ -1,0 +1,1 @@
+assert !(forall uint8: i, sint8: j. i < j)

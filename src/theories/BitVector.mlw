@@ -1,0 +1,127 @@
+(*
+   Copyright 2024-2026 Lawrence Livermore National Security, LLC and other Castor Developers.
+   See the top-level LICENSE file for details.
+
+   SPDX-License-Identifier: BSD-3-Clause
+*)
+
+module BitVector
+	use ArithmeticModel.ArithmeticModel
+	use int.Int
+	use int.Abs
+	use int.ComputerDivision
+	use int.EuclideanDivision
+	use bv.Pow2int
+	use bv.BV8
+	use bv.BV16
+	use bv.BV32
+	use bv.BV64
+
+	lemma nth_and_s8:  forall x:int, y:int, i:int. 0 <= i < 8  -> (ArithmeticModel.nth_8  x i /\ ArithmeticModel.nth_8  y i <-> ArithmeticModel.nth_8  (ArithmeticModel.and_s8  x y) i)
+	lemma nth_and_s16: forall x:int, y:int, i:int. 0 <= i < 16 -> (ArithmeticModel.nth_16 x i /\ ArithmeticModel.nth_16 y i <-> ArithmeticModel.nth_16 (ArithmeticModel.and_s16 x y) i)
+	lemma nth_and_s32: forall x:int, y:int, i:int. 0 <= i < 32 -> (ArithmeticModel.nth_32 x i /\ ArithmeticModel.nth_32 y i <-> ArithmeticModel.nth_32 (ArithmeticModel.and_s32 x y) i)
+	lemma nth_and_s64: forall x:int, y:int, i:int. 0 <= i < 64 -> (ArithmeticModel.nth_64 x i /\ ArithmeticModel.nth_64 y i <-> ArithmeticModel.nth_64 (ArithmeticModel.and_s64 x y) i)
+	meta "remove_unused:dependency" lemma nth_and_s8,  function and_s8
+	meta "remove_unused:dependency" lemma nth_and_s16, function and_s16
+	meta "remove_unused:dependency" lemma nth_and_s32, function and_s32
+	meta "remove_unused:dependency" lemma nth_and_s64, function and_s64
+
+	lemma nth_or_s8:   forall x:int, y:int, i:int. 0 <= i < 8  -> (ArithmeticModel.nth_8  x i \/ ArithmeticModel.nth_8  y i <-> ArithmeticModel.nth_8  (ArithmeticModel.or_s8   x y) i)
+	lemma nth_or_s16:  forall x:int, y:int, i:int. 0 <= i < 16 -> (ArithmeticModel.nth_16 x i \/ ArithmeticModel.nth_16 y i <-> ArithmeticModel.nth_16 (ArithmeticModel.or_s16  x y) i)
+	lemma nth_or_s32:  forall x:int, y:int, i:int. 0 <= i < 32 -> (ArithmeticModel.nth_32 x i \/ ArithmeticModel.nth_32 y i <-> ArithmeticModel.nth_32 (ArithmeticModel.or_s32  x y) i)
+	lemma nth_or_s64:  forall x:int, y:int, i:int. 0 <= i < 64 -> (ArithmeticModel.nth_64 x i \/ ArithmeticModel.nth_64 y i <-> ArithmeticModel.nth_64 (ArithmeticModel.or_s64  x y) i)
+	meta "remove_unused:dependency" lemma nth_or_s8,  function or_s8
+	meta "remove_unused:dependency" lemma nth_or_s16, function or_s16
+	meta "remove_unused:dependency" lemma nth_or_s32, function or_s32
+	meta "remove_unused:dependency" lemma nth_or_s64, function or_s64
+
+	lemma nth_xor_s8:  forall x:int, y:int, i:int. 0 <= i < 8  -> (ArithmeticModel.nth_8  x i <> ArithmeticModel.nth_8  y i <-> ArithmeticModel.nth_8  (ArithmeticModel.xor_s8  x y) i)
+	lemma nth_xor_s16: forall x:int, y:int, i:int. 0 <= i < 16 -> (ArithmeticModel.nth_16 x i <> ArithmeticModel.nth_16 y i <-> ArithmeticModel.nth_16 (ArithmeticModel.xor_s16 x y) i)
+	lemma nth_xor_s32: forall x:int, y:int, i:int. 0 <= i < 32 -> (ArithmeticModel.nth_32 x i <> ArithmeticModel.nth_32 y i <-> ArithmeticModel.nth_32 (ArithmeticModel.xor_s32 x y) i)
+	lemma nth_xor_s64: forall x:int, y:int, i:int. 0 <= i < 64 -> (ArithmeticModel.nth_64 x i <> ArithmeticModel.nth_64 y i <-> ArithmeticModel.nth_64 (ArithmeticModel.xor_s64 x y) i)
+	meta "remove_unused:dependency" lemma nth_xor_s8,  function xor_s8
+	meta "remove_unused:dependency" lemma nth_xor_s16, function xor_s16
+	meta "remove_unused:dependency" lemma nth_xor_s32, function xor_s32
+	meta "remove_unused:dependency" lemma nth_xor_s64, function xor_s64
+
+	lemma nth_not_s8:  forall x:int, i:int. 0 <= i < 8  -> (not ArithmeticModel.nth_8  x i <-> ArithmeticModel.nth_8  (ArithmeticModel.neg_s8 x)  i)
+	lemma nth_not_s16: forall x:int, i:int. 0 <= i < 16 -> (not ArithmeticModel.nth_16 x i <-> ArithmeticModel.nth_16 (ArithmeticModel.neg_s16 x) i)
+	lemma nth_not_s32: forall x:int, i:int. 0 <= i < 32 -> (not ArithmeticModel.nth_32 x i <-> ArithmeticModel.nth_32 (ArithmeticModel.neg_s32 x) i)
+	lemma nth_not_s64: forall x:int, i:int. 0 <= i < 64 -> (not ArithmeticModel.nth_64 x i <-> ArithmeticModel.nth_64 (ArithmeticModel.neg_s64 x) i)
+	meta "remove_unused:dependency" lemma nth_not_s8,  function neg_s8
+	meta "remove_unused:dependency" lemma nth_not_s16, function neg_s16
+	meta "remove_unused:dependency" lemma nth_not_s32, function neg_s32
+	meta "remove_unused:dependency" lemma nth_not_s64, function neg_s64
+
+	lemma nth_lsl_s8:  forall x:int, y:int, i:int. 0 <= y < 8  /\ 0 <= i < 8  - y -> (ArithmeticModel.nth_8  x i <-> ArithmeticModel.nth_8  (ArithmeticModel.lsl_s8  x y) (i + y))
+	lemma nth_lsl_s16: forall x:int, y:int, i:int. 0 <= y < 16 /\ 0 <= i < 16 - y -> (ArithmeticModel.nth_16 x i <-> ArithmeticModel.nth_16 (ArithmeticModel.lsl_s16 x y) (i + y))
+	lemma nth_lsl_s32: forall x:int, y:int, i:int. 0 <= y < 32 /\ 0 <= i < 32 - y -> (ArithmeticModel.nth_32 x i <-> ArithmeticModel.nth_32 (ArithmeticModel.lsl_s32 x y) (i + y))
+	lemma nth_lsl_s64: forall x:int, y:int, i:int. 0 <= y < 64 /\ 0 <= i < 64 - y -> (ArithmeticModel.nth_64 x i <-> ArithmeticModel.nth_64 (ArithmeticModel.lsl_s64 x y) (i + y))
+	meta "remove_unused:dependency" lemma nth_lsl_s8,  function lsl_s8
+	meta "remove_unused:dependency" lemma nth_lsl_s16, function lsl_s16
+	meta "remove_unused:dependency" lemma nth_lsl_s32, function lsl_s32
+	meta "remove_unused:dependency" lemma nth_lsl_s64, function lsl_s64
+
+	lemma nth_asr_s8:  forall x:int, y:int, i:int. 0 < y < 8  /\ y <= i < 8  -> (ArithmeticModel.nth_8  x i <-> ArithmeticModel.nth_8  (ArithmeticModel.asr_s8  x y) (i - y))
+	lemma nth_asr_s16: forall x:int, y:int, i:int. 0 < y < 16 /\ y <= i < 16 -> (ArithmeticModel.nth_16 x i <-> ArithmeticModel.nth_16 (ArithmeticModel.asr_s16 x y) (i - y))
+	lemma nth_asr_s32: forall x:int, y:int, i:int. 0 < y < 32 /\ y <= i < 32 -> (ArithmeticModel.nth_32 x i <-> ArithmeticModel.nth_32 (ArithmeticModel.asr_s32 x y) (i - y))
+	lemma nth_asr_s64: forall x:int, y:int, i:int. 0 < y < 64 /\ y <= i < 64 -> (ArithmeticModel.nth_64 x i <-> ArithmeticModel.nth_64 (ArithmeticModel.asr_s64 x y) (i - y))
+	meta "remove_unused:dependency" lemma nth_asr_s8,  function asr_s8
+	meta "remove_unused:dependency" lemma nth_asr_s16, function asr_s16
+	meta "remove_unused:dependency" lemma nth_asr_s32, function asr_s32
+	meta "remove_unused:dependency" lemma nth_asr_s64, function asr_s64
+
+	lemma nth_and_u8:  forall x:int, y:int, i:int. 0 <= i < 8  -> (ArithmeticModel.nth_8  x i /\ ArithmeticModel.nth_8  y i <-> ArithmeticModel.nth_8  (ArithmeticModel.and_u8  x y) i)
+	lemma nth_and_u16: forall x:int, y:int, i:int. 0 <= i < 16 -> (ArithmeticModel.nth_16 x i /\ ArithmeticModel.nth_16 y i <-> ArithmeticModel.nth_16 (ArithmeticModel.and_u16 x y) i)
+	lemma nth_and_u32: forall x:int, y:int, i:int. 0 <= i < 32 -> (ArithmeticModel.nth_32 x i /\ ArithmeticModel.nth_32 y i <-> ArithmeticModel.nth_32 (ArithmeticModel.and_u32 x y) i)
+	lemma nth_and_u64: forall x:int, y:int, i:int. 0 <= i < 64 -> (ArithmeticModel.nth_64 x i /\ ArithmeticModel.nth_64 y i <-> ArithmeticModel.nth_64 (ArithmeticModel.and_u64 x y) i)
+	meta "remove_unused:dependency" lemma nth_and_u8,  function and_u8
+	meta "remove_unused:dependency" lemma nth_and_u16, function and_u16
+	meta "remove_unused:dependency" lemma nth_and_u32, function and_u32
+	meta "remove_unused:dependency" lemma nth_and_u64, function and_u64
+
+	lemma nth_or_u8:   forall x:int, y:int, i:int. 0 <= i < 8  -> (ArithmeticModel.nth_8  x i \/ ArithmeticModel.nth_8  y i <-> ArithmeticModel.nth_8  (ArithmeticModel.or_u8   x y) i)
+	lemma nth_or_u16:  forall x:int, y:int, i:int. 0 <= i < 16 -> (ArithmeticModel.nth_16 x i \/ ArithmeticModel.nth_16 y i <-> ArithmeticModel.nth_16 (ArithmeticModel.or_u16  x y) i)
+	lemma nth_or_u32:  forall x:int, y:int, i:int. 0 <= i < 32 -> (ArithmeticModel.nth_32 x i \/ ArithmeticModel.nth_32 y i <-> ArithmeticModel.nth_32 (ArithmeticModel.or_u32  x y) i)
+	lemma nth_or_u64:  forall x:int, y:int, i:int. 0 <= i < 64 -> (ArithmeticModel.nth_64 x i \/ ArithmeticModel.nth_64 y i <-> ArithmeticModel.nth_64 (ArithmeticModel.or_u64  x y) i)
+	meta "remove_unused:dependency" lemma nth_or_u8,  function or_u8
+	meta "remove_unused:dependency" lemma nth_or_u16, function or_u16
+	meta "remove_unused:dependency" lemma nth_or_u32, function or_u32
+	meta "remove_unused:dependency" lemma nth_or_u64, function or_u64
+
+	lemma nth_xor_u8:  forall x:int, y:int, i:int. 0 <= i < 8  -> (ArithmeticModel.nth_8  x i <> ArithmeticModel.nth_8  y i <-> ArithmeticModel.nth_8  (ArithmeticModel.xor_u8  x y) i)
+	lemma nth_xor_u16: forall x:int, y:int, i:int. 0 <= i < 16 -> (ArithmeticModel.nth_16 x i <> ArithmeticModel.nth_16 y i <-> ArithmeticModel.nth_16 (ArithmeticModel.xor_u16 x y) i)
+	lemma nth_xor_u32: forall x:int, y:int, i:int. 0 <= i < 32 -> (ArithmeticModel.nth_32 x i <> ArithmeticModel.nth_32 y i <-> ArithmeticModel.nth_32 (ArithmeticModel.xor_u32 x y) i)
+	lemma nth_xor_u64: forall x:int, y:int, i:int. 0 <= i < 64 -> (ArithmeticModel.nth_64 x i <> ArithmeticModel.nth_64 y i <-> ArithmeticModel.nth_64 (ArithmeticModel.xor_u64 x y) i)
+	meta "remove_unused:dependency" lemma nth_xor_u8,  function xor_u8
+	meta "remove_unused:dependency" lemma nth_xor_u16, function xor_u16
+	meta "remove_unused:dependency" lemma nth_xor_u32, function xor_u32
+	meta "remove_unused:dependency" lemma nth_xor_u64, function xor_u64
+
+	lemma nth_not_u8:  forall x:int, i:int. 0 <= i < 8  -> (not ArithmeticModel.nth_8  x i <-> ArithmeticModel.nth_8  (ArithmeticModel.neg_u8 x)  i)
+	lemma nth_not_u16: forall x:int, i:int. 0 <= i < 16 -> (not ArithmeticModel.nth_16 x i <-> ArithmeticModel.nth_16 (ArithmeticModel.neg_u16 x) i)
+	lemma nth_not_u32: forall x:int, i:int. 0 <= i < 32 -> (not ArithmeticModel.nth_32 x i <-> ArithmeticModel.nth_32 (ArithmeticModel.neg_u32 x) i)
+	lemma nth_not_u64: forall x:int, i:int. 0 <= i < 64 -> (not ArithmeticModel.nth_64 x i <-> ArithmeticModel.nth_64 (ArithmeticModel.neg_u64 x) i)
+	meta "remove_unused:dependency" lemma nth_not_u8,  function neg_u8
+	meta "remove_unused:dependency" lemma nth_not_u16, function neg_u16
+	meta "remove_unused:dependency" lemma nth_not_u32, function neg_u32
+	meta "remove_unused:dependency" lemma nth_not_u64, function neg_u64
+
+	lemma nth_lsl_u8:  forall x:int, y:int, i:int. 0 <= y < 8  /\ 0 <= i < 8  - y -> (ArithmeticModel.nth_8  x i <-> ArithmeticModel.nth_8  (ArithmeticModel.lsl_u8  x y) (i + y))
+	lemma nth_lsl_u16: forall x:int, y:int, i:int. 0 <= y < 16 /\ 0 <= i < 16 - y -> (ArithmeticModel.nth_16 x i <-> ArithmeticModel.nth_16 (ArithmeticModel.lsl_u16 x y) (i + y))
+	lemma nth_lsl_u32: forall x:int, y:int, i:int. 0 <= y < 32 /\ 0 <= i < 32 - y -> (ArithmeticModel.nth_32 x i <-> ArithmeticModel.nth_32 (ArithmeticModel.lsl_u32 x y) (i + y))
+	lemma nth_lsl_u64: forall x:int, y:int, i:int. 0 <= y < 64 /\ 0 <= i < 64 - y -> (ArithmeticModel.nth_64 x i <-> ArithmeticModel.nth_64 (ArithmeticModel.lsl_u64 x y) (i + y))
+	meta "remove_unused:dependency" lemma nth_lsl_u8,  function lsl_u8
+	meta "remove_unused:dependency" lemma nth_lsl_u16, function lsl_u16
+	meta "remove_unused:dependency" lemma nth_lsl_u32, function lsl_u32
+	meta "remove_unused:dependency" lemma nth_lsl_u64, function lsl_u64
+
+	lemma nth_lsr_u8:  forall x:int, y:int, i:int. 0 < y < 8  /\ y <= i < 8  -> (ArithmeticModel.nth_8  x i <-> ArithmeticModel.nth_8  (ArithmeticModel.lsr_u8  x y) (i - y))
+	lemma nth_lsr_u16: forall x:int, y:int, i:int. 0 < y < 16 /\ y <= i < 16 -> (ArithmeticModel.nth_16 x i <-> ArithmeticModel.nth_16 (ArithmeticModel.lsr_u16 x y) (i - y))
+	lemma nth_lsr_u32: forall x:int, y:int, i:int. 0 < y < 32 /\ y <= i < 32 -> (ArithmeticModel.nth_32 x i <-> ArithmeticModel.nth_32 (ArithmeticModel.lsr_u32 x y) (i - y))
+	lemma nth_lsr_u64: forall x:int, y:int, i:int. 0 < y < 64 /\ y <= i < 64 -> (ArithmeticModel.nth_64 x i <-> ArithmeticModel.nth_64 (ArithmeticModel.lsr_u64 x y) (i - y))
+	meta "remove_unused:dependency" lemma nth_lsr_u8,  function lsr_u8
+	meta "remove_unused:dependency" lemma nth_lsr_u16, function lsr_u16
+	meta "remove_unused:dependency" lemma nth_lsr_u32, function lsr_u32
+	meta "remove_unused:dependency" lemma nth_lsr_u64, function lsr_u64
+end

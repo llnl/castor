@@ -1,0 +1,1 @@
+requires min_int(T) <= this->first /\ this->first < max_int(T) - 1

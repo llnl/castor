@@ -1,0 +1,47 @@
+# Updated syntax of specifying PEGs
+Grammar <- Spacing Definition+ EndOfFile
+Definition <- Identifier LEFTARROW Expression
+
+Expression <- Sequence (SLASH Sequence)*
+Sequence <- Prefix+ (ACTION Identifier)?
+Prefix <- (Prefix_Extra)? Suffix
+Prefix_Extra <- AND / NOT
+Suffix <- Primary (Suffix0)?
+Suffix0 <- QUESTION / STAR / PLUS
+
+Primary <- Identifier ('^'[0-9]([0-9])?)? !LEFTARROW Spacing
+        / OPEN Sequence CLOSE
+        / Literal
+        / Class
+        / DOT
+
+Identifier <- IdentStart IdentCont* Spacing
+IdentStart <- [A-Za-z_]
+IdentCont <- IdentStart
+         / [0-9]
+
+Literal <- ['] (!['] Char)+ ['] Spacing
+        /   ["] (!["] Char)+ ["] Spacing
+Class <- '[' (!']' Range)+ ']' Spacing
+Range <- Char '-' !']' Char / Char
+Char <- '\' [nrt\[\]\\]
+        / .
+
+LEFTARROW <- '<-' Spacing
+SLASH <- '/' Spacing
+ACTION <- '@' Spacing
+AND <- '&' Spacing
+NOT <- '!' Spacing
+QUESTION <- '?' Spacing
+STAR <- '*' Spacing
+PLUS <- "+" Spacing
+OPEN <- '(' Spacing
+CLOSE <- ')' Spacing
+DOT <- '.' Spacing
+
+Spacing <- (Spacing_Extra)*
+Spacing_Extra <- Space / Comment
+Space <- ' ' / '\t' / EndOfLine
+Comment <- '#' (!EndOfLine .)* EndOfLine
+EndOfLine <- '\r\n' / '\n' / '\r'
+EndOfFile <- !.

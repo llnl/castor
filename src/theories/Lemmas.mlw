@@ -1,0 +1,47 @@
+(*
+   Copyright 2024-2026 Lawrence Livermore National Security, LLC and other Castor Developers.
+   See the top-level LICENSE file for details.
+
+   SPDX-License-Identifier: BSD-3-Clause
+*)
+
+module Lemmas
+	use MemoryModel.MemoryModel
+	use int.Int
+	use map.Map
+	use bv.BV8
+	use bv.BV16
+	use bv.BV32
+	use bv.BV64
+
+	predicate equals (x y : var) = (x.addr = y.addr)
+
+	let lemma deref_offset_addr_is_deref (read : vtype) (v : var) (x : int)
+	requires { 0 <= x }
+	requires { v.addr <> 0 }
+	requires { read.data[v.addr] /\ read.data[v.addr + x] }
+	ensures { equals (MemoryModel.deref_offset v.addr x)
+			(MemoryModel.offset v x) } = ()
+
+	let lemma double_offset_is_single (read : vtype) (v : var) (x : int) (y : int)
+	requires { 0 <= x /\ 0 <= y }
+	requires { v.addr <> 0 }
+	requires { read.data[v.addr] /\ read.data[v.addr + x] /\ read.data[v.addr + x + y] }
+	ensures { equals (MemoryModel.offset
+			(MemoryModel.offset v x) y)
+			 (MemoryModel.offset v (x + y)) } = ()
+
+	let lemma double_deref_offset_is_single (read : vtype) (v : var) (x : int) (y : int)
+	requires { 0 <= x /\ 0 <= y }
+	requires { v.addr <> 0 }
+	requires { read.data[v.addr] /\ read.data[v.addr + x] /\ read.data[v.addr + x + y] }
+	ensures { equals (MemoryModel.deref_offset (offset v x).addr y)
+		(MemoryModel.deref_offset v.addr (x + y)) } = ()
+
+	let lemma offset_0_is_id (read : vtype) (v : var)
+	requires { read.data[v.addr] }
+	requires { v.addr <> 0 }
+	ensures { equals (MemoryModel.offset v 0) v } =
+		let newv = MemoryModel.offset v 0 in
+		assert { newv.addr = v.addr };
+end

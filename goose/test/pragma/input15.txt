@@ -1,0 +1,1 @@
+invariant forall sint32: a. 0 <= a /\ a < i => arr[a] == old(arr[a]) + 1

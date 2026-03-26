@@ -1,0 +1,1 @@
+writes arr[0 .. len - 1], newref, i

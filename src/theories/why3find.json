@@ -1,0 +1,10 @@
+{
+  "configs": [],
+  "depth": 4,
+  "drivers": [],
+  "packages": [],
+  "provers": [ "alt-ergo", "z3", "cvc4", "cvc5", "vampire" ],
+  "tactics": [ "split_vc", "remove_unused" ],
+  "time": 5,
+  "warnoff": []
+}

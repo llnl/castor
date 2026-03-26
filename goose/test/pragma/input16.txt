@@ -1,0 +1,1 @@
+assert forall sint32: a. 0 <= a /\ a < ARRLEN => arr[a] == 0

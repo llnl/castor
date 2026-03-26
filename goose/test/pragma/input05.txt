@@ -1,0 +1,1 @@
+assert !(exists uint8: i, uint8: j. i < j)

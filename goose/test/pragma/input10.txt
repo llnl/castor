@@ -1,0 +1,1 @@
+assert arr[2].first == 5 /\ arr[2].second == 6

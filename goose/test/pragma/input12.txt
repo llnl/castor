@@ -1,0 +1,1 @@
+requires forall sint32: i. 0 <= i /\ i < len => min_sint32 <= arr[i] /\ arr[i] < max_sint32 - 1

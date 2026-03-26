@@ -1,0 +1,39 @@
+// Copyright 2024-2026 Lawrence Livermore National Security, LLC and other Castor Developers.
+// See the top-level LICENSE file for details.
+//
+// SPDX-License-Identifier: BSD-3-Clause
+
+#ifndef _MEMORY
+#define _MEMORY
+
+#include <cstddef>
+
+namespace std
+{
+	template <class T>
+	struct allocator
+	{
+	public:
+		using value_type = T;
+		using pointer = T*;
+		using const_pointer = const T*;
+		using reference = T&;
+		using const_reference = const T&;
+		using size_type = std::size_t;
+		using difference_type = std::ptrdiff_t;
+	};
+
+	template <class Alloc>
+	struct allocator_traits
+	{
+	public:
+		using allocator_type = Alloc;
+		using value_type = typename Alloc::value_type;
+		using pointer = typename Alloc::pointer;
+		using const_pointer = typename Alloc::const_pointer;
+		using size_type = typename Alloc::size_type;
+		using difference_type = typename Alloc::difference_type;
+	};
+}
+
+#endif

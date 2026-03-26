@@ -1,0 +1,291 @@
+(*
+   Copyright 2024-2026 Lawrence Livermore National Security, LLC and other Castor Developers.
+   See the top-level LICENSE file for details.
+
+   SPDX-License-Identifier: BSD-3-Clause
+*)
+
+module MemoryModel
+	use int.Int
+	use bool.Bool
+	use array.Array
+	use map.Map
+
+	let function assign (f: map int 'b) (x: int) (v: 'b) : map int 'b =
+		fun y -> if y = x then v else f y
+
+	let function eq (x y : array int) : bool
+	=
+		let ret = any bool ensures { result <-> x.length = y.length /\ forall i:int. 0 <= i < x.length -> (Array.([]) x i) = (Array.([]) y i) } in
+		ret
+
+	type vtype = { data : map int bool }
+	invariant { exists x:int. (x >= 0 /\ forall y:int. (y >= 0 -> not data[x + y])) }
+	by { data = fun x -> x < 42 }
+
+	val ref tape  : map int int
+	val ref read  : vtype
+	val ref write : vtype
+
+	type var = { addr : int }
+	invariant { addr >= 0 }
+	by { addr = 0 }
+
+	let function nullptr = 0
+
+	(*
+	  The underlying theory is observed to adhere to the C++ standard. See C++17 standard draft, sections:
+
+	  - 4.4.1 (caveat: our memory model is not strictly byte-addressible, but conversion rules hide this)
+	  - 8.10.2.2-3
+	  - 8.9.3.1-3
+	*)
+
+	let create () : var
+	writes { read, write }
+	ensures { forall i:int. i <> result.addr -> read.data[i] = old read.data[i] }
+	ensures { forall i:int. i <> result.addr -> write.data[i] = old write.data[i] }
+	ensures { read.data[result.addr] }
+	ensures { write.data[result.addr] }
+	ensures { not (old read.data[result.addr]) }
+	ensures { result.addr <> 0 }
+	=
+		let next_available = any int ensures { result > 0 /\ forall y:int. (y >= 0 -> not read.data[result + y]) } in
+		read <- { data = assign read.data next_available true };
+		write <- { data = assign write.data next_available true };
+		{ addr = next_available }
+
+	let alloca (size : int) : var
+	requires { [@expl:Allocation is non-zero size] size > 0 }
+	writes { read, write, tape }
+	ensures { forall i:int. not (result.addr <= i < result.addr + size) -> read.data[i] = old read.data[i] }
+	ensures { forall i:int. result.addr <= i < result.addr + size -> read.data[i] }
+	ensures { forall i:int. result.addr <= i < result.addr + size -> not (old read.data[i]) }
+	ensures { forall i:int. not (result.addr <= i < result.addr + size) -> write.data[i] = old write.data[i] }
+	ensures { forall i:int. result.addr <= i < result.addr + size -> write.data[i] }
+	ensures { forall i:int. not (result.addr <= i < result.addr + size) -> tape[i] = old tape[i] }
+	ensures { forall i:int. result.addr <= i < result.addr + size -> tape[i] = 0 }
+	ensures { result.addr <> 0 }
+	=
+		let next_available = any int ensures { result > 0 /\ forall y:int. (y >= 0 -> (not read.data[result + y] /\ not write.data[result + y])) } in
+		for i = 0 to size - 1 do
+			invariant { forall a:int. not (next_available <= a < next_available + i) -> read.data[a] = old read.data[a] }
+			invariant { forall a:int. next_available <= a < next_available + i -> read.data[a] }
+			invariant { forall a:int. next_available <= a < next_available + i -> not (old read.data[a]) }
+			invariant { forall a:int. not (next_available <= a < next_available + i) -> write.data[a] = old write.data[a] }
+			invariant { forall a:int. next_available <= a < next_available + i -> write.data[a] }
+			invariant { forall a:int. not (next_available <= a < next_available + i) -> tape[a] = old tape[a] }
+			invariant { forall a:int. next_available <= a < next_available + i -> tape[a] = 0 }
+			invariant { forall y:int. y >= 0 -> not read.data[next_available + i + y] }
+			invariant { forall y:int. y >= 0 -> not write.data[next_available + i + y] }
+			assert { (forall y:int. y >= 0 -> not (assign read.data (next_available + i) true)[next_available + i + 1 + y]) by
+				forall y:int. y >= 0 -> not read.data[next_available + i + (y + 1)] by
+				forall y:int. y >= 1 -> not read.data[next_available + i + y] };
+			assert { (forall y:int. y >= 0 -> not (assign write.data (next_available + i) true)[next_available + i + 1 + y]) by
+				forall y:int. y >= 0 -> not write.data[next_available + i + (y + 1)] by
+				forall y:int. y >= 1 -> not write.data[next_available + i + y] };
+			read <- { data = assign read.data (next_available + i) true };
+			write <- { data = assign write.data (next_available + i) true };
+			tape <- assign tape (next_available + i) 0
+		done;
+		{ addr = next_available }
+
+	let set_const (v : var) (size : int) : ()
+	requires { [@expl:Const value is non-zero size] size > 0 }
+	writes { write }
+	ensures { forall i:int. not (v.addr <= i < v.addr + size) -> write.data[i] = old write.data[i] }
+	ensures { forall i:int. v.addr <= i < v.addr + size -> not write.data[i] } =
+		for a = 0 to size - 1 do
+			invariant { forall i:int. not (v.addr <= i < v.addr + a) -> write.data[i] = old write.data[i] }
+			invariant { forall i:int. v.addr <= i < v.addr + a -> not write.data[i] }
+			write <- { data = assign write.data (v.addr + a) false }
+		done;
+		()
+
+	let function get (tape : map int int) (read : vtype) (v : var) : int
+	requires { [@expl:Value is readable] read.data[v.addr] }
+	requires { [@expl:Not reading from address 0] v.addr <> 0 } =
+		tape[v.addr]
+
+	let function get_slice (tape : map int int) (read : vtype) (v : var) (size : int) : array int
+	requires { [@expl:Object is readable] forall i:int. v.addr <= i < v.addr + size -> read.data[i] }
+	requires { [@expl:Read is non-zero size] size > 0 }
+	requires { [@expl:Not reading from address 0] v.addr <> 0 }
+	writes { }
+	ensures { forall i:int. 0 <= i < size -> tape[v.addr + i] = Array.([]) result i }
+	ensures { forall i:int. v.addr <= i < v.addr + size -> tape[i] = Array.([]) result (i - v.addr) }
+	ensures { result.length = size } =
+		let res = make size 0 in
+		for i = 0 to size - 1 do
+			invariant { forall a:int. 0 <= a < i -> tape[v.addr + a] = Array.([]) res a }
+			Array.([]<-) res i tape[v.addr + i]
+		done; res
+
+	let function offset (v : var) (offset : int) : var
+	requires { [@expl:Offset of object is nonnegative] offset >= 0 } =
+		{ addr = v.addr + offset }
+
+	let get_offset (v : var) (offset : int) : int
+	requires { [@expl:Offset of object is readable] read.data[v.addr + offset] }
+	requires { [@expl:Not reading from address 0] v.addr <> 0 }
+	writes { }
+	ensures { result = tape[v.addr + offset] } =
+		tape[v.addr + offset]
+
+	let set (v : var) (value : int) : var
+	requires { [@expl:Writing to non-const memory] write.data[v.addr] }
+	requires { [@expl:Not writing to address 0] v.addr <> 0 }
+	writes { tape }
+	requires { 0 <= v.addr }
+	ensures { forall a:int. a <> v.addr -> tape[a] = old tape[a] }
+	ensures { result = v }
+	ensures { tape[v.addr] = value } =
+		tape <- assign tape v.addr value ;
+		v
+
+	let set_slice (v : var) (value : array int) : var
+	requires { [@expl:Writing to non-const memory] forall i:int. v.addr <= i < v.addr + value.length -> write.data[i] }
+	requires { [@expl:Not writing to address 0] v.addr <> 0 }
+	writes { tape }
+	ensures { forall i:int. i < v.addr \/ i >= v.addr + value.length -> tape[i] = old tape[i] }
+	ensures { forall i:int. v.addr <= i < v.addr + value.length -> tape[i] = Array.([]) value (i - v.addr) }
+	ensures { forall i:int. 0 <= i < value.length -> tape[i + v.addr] = Array.([]) value i }
+	ensures { result = v } =
+		for i = 0 to value.length - 1 do
+			invariant { forall a:int. a < v.addr \/ a >= v.addr + i -> tape[a] = old tape[a] }
+			invariant { forall a:int. 0 <= a < i -> tape[v.addr + a] = Array.([]) value a }
+			tape <- assign tape (v.addr + i) (Array.([]) value i)
+		done; v
+
+	let create_val (init : int) : var
+	writes { tape, read, write }
+	ensures { forall a:int. a <> result.addr -> tape[a] = old tape[a] }
+	ensures { forall a:int. a <> result.addr -> read.data[a] = old read.data[a] }
+	ensures { forall a:int. a <> result.addr -> write.data[a] = old write.data[a] }
+	ensures { not (old read.data[result.addr]) }
+	ensures { read.data[result.addr] }
+	ensures { write.data[result.addr] }
+	ensures { result.addr <> 0 }
+	ensures { tape[result.addr] = init } =
+		let variable = create () in
+		let _ = set variable init in
+		variable
+
+	let create_slice (init : array int) : var
+	requires { [@expl:Allocation is non-zero size] init.length > 0 }
+	writes { tape, read, write }
+	ensures { result.addr <> 0 }
+	ensures { forall i:int. not (result.addr <= i < result.addr + init.length) -> read.data[i] = old read.data[i] }
+	ensures { forall i:int. result.addr <= i < result.addr + init.length -> read.data[i] }
+	ensures { forall i:int. result.addr <= i < result.addr + init.length -> not (old read.data[i]) }
+	ensures { forall i:int. not (result.addr <= i < result.addr + init.length) -> write.data[i] = old write.data[i] }
+	ensures { forall i:int. result.addr <= i < result.addr + init.length -> write.data[i] }
+	ensures { forall i:int. i < result.addr \/ i >= result.addr + init.length -> tape[i] = old tape[i] }
+	ensures { forall i:int. result.addr <= i < result.addr + init.length -> tape[i] = Array.([]) init (i - result.addr) }
+	ensures { forall i:int. 0 <= i < init.length -> tape[i + result.addr] = Array.([]) init i } =
+		let variable = alloca init.length in
+		let _ = set_slice variable init in
+		variable
+
+	let function deref (a : int) : var
+	requires { [@expl:Pointer dereference is nonnegative] a >= 0 } =
+		{ addr = a }
+
+	let malloc (size : int) : var
+	requires { [@expl:Allocation is non-zero size] size > 0 }
+	writes { read, write, tape }
+	ensures { result.addr <> 0 }
+	ensures { 0 < tape[result.addr] }
+	ensures { forall i:int. 0 <= i < size -> read.data[tape[result.addr] + i] }
+	ensures { forall i:int. 0 <= i < size -> write.data[tape[result.addr] + i] }
+	ensures { forall i:int. 0 <= i < size -> result.addr <> tape[result.addr] + i }
+	ensures { forall i:int. i <> result.addr /\ (i < tape[result.addr] \/ i >= tape[result.addr] + size) -> tape[i] = old tape[i] }
+	ensures { forall i:int. i <> result.addr /\ (i < tape[result.addr] \/ i >= tape[result.addr] + size) -> read.data[i] = old read.data[i] }
+	ensures { forall i:int. i <> result.addr /\ (i < tape[result.addr] \/ i >= tape[result.addr] + size) -> write.data[i] = old write.data[i] }
+	ensures { read.data[result.addr] }
+	ensures { write.data[result.addr] }
+	ensures { not old read.data[result.addr] }
+	ensures { forall i:int. tape[result.addr] <= i < tape[result.addr] + size -> not old read.data[i] }
+	=
+		let raw = alloca size in
+		create_val raw.addr
+
+	let function deref_offset (a : int) (offset : int) : var
+	requires { [@expl:Offset of object is nonnegative] 0 <= a + offset } =
+		{ addr = a + offset }
+
+	let copy (v : var) (size : int) : var
+	requires { [@expl:Copy source is readable] forall i:int. 0 <= i < size -> read.data[v.addr + i] }
+	requires { [@expl:Copy size is non-zero] size > 0 }
+	requires { [@expl:Not copying from address 0] v.addr <> 0 }
+	writes { tape, read, write }
+	ensures { result.addr <> 0 }
+	ensures { forall i:int. not (result.addr <= i < result.addr + size) -> read.data[i] = old read.data[i] }
+	ensures { forall i:int. result.addr <= i < result.addr + size -> not old read.data[i] }
+	ensures { forall i:int. result.addr <= i < result.addr + size -> read.data[i] }
+	ensures { forall i:int. not (result.addr <= i < result.addr + size) -> write.data[i] = old write.data[i] }
+	ensures { forall i:int. result.addr <= i < result.addr + size -> write.data[i] }
+	ensures { forall i:int. not (result.addr <= i < result.addr + size) -> tape[i] = old tape[i] }
+	ensures { forall i:int. result.addr <= i < result.addr + size -> tape[i] = tape[v.addr - result.addr + i] } =
+		let newv = alloca size in
+		for a = 0 to size - 1 do
+			invariant { forall i:int. not (newv.addr <= i < newv.addr + size) -> read.data[i] = old read.data[i] }
+			invariant { forall i:int. newv.addr <= i < newv.addr + size -> read.data[i] }
+			invariant { forall i:int. not (newv.addr <= i < newv.addr + size) -> write.data[i] = old write.data[i] }
+			invariant { forall i:int. newv.addr <= i < newv.addr + size -> write.data[i] }
+			invariant { forall i:int. not (newv.addr <= i < newv.addr + size) -> tape[i] = old tape[i] }
+			invariant { forall i:int. newv.addr <= i < newv.addr + a -> tape[i] = tape[v.addr - newv.addr + i] }
+			let _ = set (offset newv a) (get tape read (offset v a)) in ()
+		done ;
+		newv
+
+	let free (v : var) (size : int) : ()
+	requires { [@expl:Deallocating only allocated memory] forall i:int. 0 <= i < size -> read.data[tape[v.addr] + i] }
+	requires { [@expl:Not deallocating at address 0] v.addr <> 0 }
+	requires { [@expl:Not deallocating at address 0] 0 < tape[v.addr] }
+	requires { [@expl:Pointer for deallocation is readable] read.data[v.addr] }
+	requires { [@expl:Pointer for deallocation is not self-reference] forall i:int. 0 <= i < size -> tape[v.addr] + i <> v.addr }
+	requires { [@expl:Requested size for deallocation is non-zero] size > 0 }
+	writes { read, write }
+	ensures { forall i:int. not (old tape[v.addr] <= i < old tape[v.addr] + size) -> read.data[i] = old read.data[i] }
+	ensures { forall i:int. old tape[v.addr] <= i < old tape[v.addr] + size -> not read.data[i] }
+	ensures { forall i:int. not (old tape[v.addr] <= i < old tape[v.addr] + size) -> write.data[i] = old write.data[i] }
+	ensures { forall i:int. old tape[v.addr] <= i < old tape[v.addr] + size -> not write.data[i] }
+	ensures { forall i:int. tape[i] = old tape[i] } =
+		for a = 0 to size - 1 do
+			invariant { forall i:int. tape[v.addr] <= i < tape[v.addr] + a -> not read.data[i] }
+			invariant { forall i:int. not (tape[v.addr] <= i < tape[v.addr] + a) -> read.data[i] = old read.data[i] }
+			invariant { forall i:int. tape[v.addr] <= i < tape[v.addr] + a -> not write.data[i] }
+			invariant { forall i:int. not (tape[v.addr] <= i < tape[v.addr] + a) -> write.data[i] = old write.data[i] }
+			read <- { data = assign read.data (tape[v.addr] + a) false };
+			write <- { data = assign write.data (tape[v.addr] + a) false }
+		done ;
+		()
+
+	let upcast (from : array int) (size : int) : array int
+	requires { [@expl:Upcast is strictly narrowing cast] from.length >= size }
+	requires { [@expl:Upcast size is non-zero] size > 0 }
+	writes { }
+	ensures { forall i:int. 0 <= i < size -> Array.([]) result i = Array.([]) from i }
+	ensures { result.length = size } =
+		let res = make size 0 in
+		for i = 0 to size - 1 do
+			invariant { forall a:int. 0 <= a < i -> Array.([]) res a = Array.([]) from a }
+			invariant { res.length = size }
+			Array.([]<-) res i (Array.([]) from i)
+		done;
+		res
+
+	let make_const (v : var) (size : int)
+	requires { [@expl:Making only valid data const] forall i:int. 0 <= i < size -> read.data[v.addr + i] }
+	requires { [@expl:Making non-zero bytes const] size > 0 }
+	writes { write }
+	ensures { forall i:int. 0 <= i < size -> not write.data[v.addr + i] }
+	ensures { forall i:int. i < v.addr \/ i >= v.addr + size -> write.data[i] = old write.data[i] } =
+		for i = 0 to size - 1 do
+			invariant { forall a:int. 0 <= a < i -> not write.data[v.addr + a] }
+			invariant { forall a:int. a < v.addr \/ a >= v.addr + i -> write.data[a] = old write.data[a] }
+			write <- { data = assign write.data (v.addr + i) false }
+		done ;
+		()
+end

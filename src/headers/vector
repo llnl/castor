@@ -1,0 +1,131 @@
+// Copyright 2024-2026 Lawrence Livermore National Security, LLC and other Castor Developers.
+// See the top-level LICENSE file for details.
+//
+// SPDX-License-Identifier: BSD-3-Clause
+
+#ifndef _VECTOR
+#define _VECTOR
+
+#include <initializer_list>
+#include <memory>
+
+namespace std
+{
+	template <class T, class Allocator = allocator<T>>
+	class vector
+	{
+	public:
+		using value_type = T;
+		using allocator_type = Allocator;
+		using size_type = std::size_t;
+		using difference_type = std::ptrdiff_t;
+		using reference = value_type&;
+		using const_reference = const value_type&;
+		using pointer = typename allocator_traits<Allocator>::pointer;
+		using const_pointer = typename allocator_traits<Allocator>::const_pointer;
+		using iterator = T*;
+		using const_iterator = const T*;
+		/*using reverse_iterator = reverse_iterator<iterator>;
+		using const_reverse_iterator = reverse_iterator<const_iterator>;*/
+
+		vector() : vector(Allocator()) { }
+		explicit vector(const Allocator& alloc);
+		explicit vector(size_type count, const Allocator& alloc = Allocator());
+		vector(size_type count, const T& value, const Allocator& alloc = Allocator());
+
+		template <class InputIt>
+		vector(InputIt first, InputIt last, const Allocator& alloc = Allocator());
+		
+		vector(const vector& other);
+		vector(vector&& other);
+		vector(const vector& other, const Allocator& alloc);
+		vector(vector&& other, const Allocator& alloc);
+		vector(initializer_list<T> init, const Allocator& alloc = Allocator());
+
+		~vector();
+
+		vector& operator=(const vector& other);
+		vector& operator=(vector&& other);
+		vector& operator=(initializer_list<value_type> ilist);
+
+		void assign(size_type count, const T& value);
+		template <class InputIt>
+		void assign(InputIt first, InputIt last);
+		void assign(initializer_list<T> ilist);
+
+		allocator_type get_allocator() const;
+
+		reference at(size_type pos);
+		const_reference at(size_type pos) const;
+
+		reference operator[](size_type pos);
+		const_reference operator[](size_type pos) const;
+
+		reference front();
+		const_reference front() const;
+
+		reference back();
+		const_reference back() const;
+
+		T* data() noexcept;
+		const T* data() const noexcept;
+
+		iterator begin() noexcept;
+		const_iterator begin() const noexcept;
+		const_iterator cbegin() const noexcept;
+
+		iterator end() noexcept;
+		const_iterator end() const noexcept;
+		const_iterator cend() const noexcept;
+
+		/*reverse_iterator rbegin() noexcept;
+		const_reverse_iterator rbegin() const noexcept;
+		const_reverse_iterator crbegin() const noexcept;
+
+		reverse_iterator rend() noexcept;
+		const_reverse_iterator rend() const noexcept;
+		const_reverse_iterator crend() const noexcept;*/
+
+		bool empty() const noexcept;
+		size_type size() const noexcept;
+		size_type max_size() const noexcept;
+		void reserve(size_type new_cap);
+		size_type capacity() const noexcept;
+		void shrink_to_vit();
+
+		void clear() noexcept;
+
+		iterator insert(const_iterator pos, const T& value);
+		iterator insert(const_iterator pos, T&& value);
+		iterator insert(const_iterator pos, size_type count, const T& value);
+		template <class InputIt>
+		iterator insert(const_iterator pos, InputIt first, InputIt last);
+		iterator insert(const_iterator pos, initializer_list<T> ilist);
+
+		template <class... Args>
+		iterator emplace(const_iterator pos, Args&&... args);
+
+		iterator erase(const_iterator pos);
+		iterator erase(const_iterator first, const_iterator last);
+
+		void push_back(const T& value);
+		void push_back(T&& value);
+
+		template <class... Args>
+		void emplace_back(Args&&... args);
+
+		void pop_back();
+		void resize(size_type count);
+		void resize(size_type count, const value_type& value);
+
+		void swap(vector& other);
+	};
+
+	/*namespace pmr
+	{
+		template <class T>
+		using vector = vector<T, std::pmr::polymorphic_allocator<T>>;
+	}*/
+}
+
+#endif

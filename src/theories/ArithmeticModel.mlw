@@ -1,0 +1,690 @@
+(*
+   Copyright 2024-2026 Lawrence Livermore National Security, LLC and other Castor Developers.
+   See the top-level LICENSE file for details.
+
+   SPDX-License-Identifier: BSD-3-Clause
+*)
+
+(*                              This file takes inspiration from Frama-C.                               *)
+(* See: https://git.frama-c.com/pub/frama-c/-/blob/master/src/plugins/wp/share/why3/frama_c_wp/cint.mlw *)
+(*                         I have found it to be useful while developing Castor.                        *)
+
+theory ArithmeticModel
+	use int.Int
+	use int.Abs
+	use int.ComputerDivision
+	use int.EuclideanDivision
+	use bv.Pow2int
+	use bv.BV8
+	use bv.BV16
+	use bv.BV32
+	use bv.BV64
+
+	let function (/) (a : int) (b : int) : int
+	requires { [@expl:Not dividing by 0] b <> 0 }
+	ensures { result = ComputerDivision.div a b }
+	= ComputerDivision.div a b
+
+	let function max_uint8: int = 256
+	let function max_sint8: int = 128
+	let function max_uint16: int = 65536
+	let function max_sint16: int = 32768
+	let function max_uint32: int = 4294967296
+	let function max_sint32: int = 2147483648
+	let function max_uint64: int = 18446744073709551616
+	let function max_sint64: int = 9223372036854775808
+
+	predicate is_uint8 (x : int)  = 0 <= x < max_uint8
+	predicate is_sint8 (x : int)  = -max_sint8 <= x < max_sint8
+	predicate is_uint16 (x : int) = 0 <= x < max_uint16
+	predicate is_sint16 (x : int) = -max_sint16 <= x < max_sint16
+	predicate is_uint32 (x : int) = 0 <= x < max_uint32
+	predicate is_sint32 (x : int) = -max_sint32 <= x < max_sint32
+	predicate is_uint64 (x : int) = 0 <= x < max_uint64
+	predicate is_sint64 (x : int) = -max_sint64 <= x < max_sint64
+
+	let rec function to_uint8  (x : int)
+	variant { if x < 0 then abs(x) + max_uint8 else x }
+	ensures { is_uint8 result }
+	= if x < 0 then to_uint8 (x + max_uint8) else if x >= max_uint8 then to_uint8 (x - max_uint8) else x
+
+	val function to_sint8  int : int
+
+	let rec function to_uint16 (x : int)
+	variant { if x < 0 then abs(x) + max_uint16 else x }
+	ensures { is_uint16 result }
+	= if x < 0 then to_uint16 (x + max_uint16) else if x >= max_uint16 then to_uint16 (x - max_uint16) else x
+
+	val function to_sint16 int : int
+
+	let rec function to_uint32 (x : int) variant { if x < 0 then abs(x) + max_uint32 else x }
+	ensures { is_uint32 result }
+	= if x < 0 then to_uint32 (x + max_uint32) else if x >= max_uint32 then to_uint32 (x - max_uint32) else x
+
+	val function to_sint32 int : int
+
+	let rec function to_uint64 (x : int)
+	variant { if x < 0 then abs(x) + max_uint64 else x }
+	ensures { is_uint64 result }
+	= if x < 0 then to_uint64 (x + max_uint64) else if x >= max_uint64 then to_uint64 (x - max_uint64) else x
+
+	val function to_sint64 int : int
+
+	lemma is_to_uint8  : forall x:int. is_uint8  (to_uint8 x)
+	axiom is_to_sint8  : forall x:int. is_sint8  (to_sint8 x)
+	lemma is_to_uint16 : forall x:int. is_uint16 (to_uint16 x)
+	axiom is_to_sint16 : forall x:int. is_sint16 (to_sint16 x)
+	lemma is_to_uint32 : forall x:int. is_uint32 (to_uint32 x)
+	axiom is_to_sint32 : forall x:int. is_sint32 (to_sint32 x)
+	lemma is_to_uint64 : forall x:int. is_uint64 (to_uint64 x)
+	axiom is_to_sint64 : forall x:int. is_sint64 (to_sint64 x)
+	meta "remove_unused:dependency" lemma is_to_uint8,  function to_uint8
+	meta "remove_unused:dependency" lemma is_to_uint16, function to_uint16
+	meta "remove_unused:dependency" lemma is_to_uint32, function to_uint32
+	meta "remove_unused:dependency" lemma is_to_uint64, function to_uint64
+	meta "remove_unused:dependency" axiom is_to_sint8,  function to_sint8
+	meta "remove_unused:dependency" axiom is_to_sint16, function to_sint16
+	meta "remove_unused:dependency" axiom is_to_sint32, function to_sint32
+	meta "remove_unused:dependency" axiom is_to_sint64, function to_sint64
+
+	lemma id_uint8  : forall x:int [ to_uint8 x ].  is_uint8 x  -> (to_uint8 x)  = x
+	axiom id_sint8  : forall x:int [ to_sint8 x ].  is_sint8 x  -> (to_sint8 x)  = x
+	lemma id_uint16 : forall x:int [ to_uint16 x ]. is_uint16 x -> (to_uint16 x) = x
+	axiom id_sint16 : forall x:int [ to_sint16 x ]. is_sint16 x -> (to_sint16 x) = x
+	lemma id_uint32 : forall x:int [ to_uint32 x ]. is_uint32 x -> (to_uint32 x) = x
+	axiom id_sint32 : forall x:int [ to_sint32 x ]. is_sint32 x -> (to_sint32 x) = x
+	lemma id_uint64 : forall x:int [ to_uint64 x ]. is_uint64 x -> (to_uint64 x) = x
+	axiom id_sint64 : forall x:int [ to_sint64 x ]. is_sint64 x -> (to_sint64 x) = x
+	meta "remove_unused:dependency" lemma id_uint8,  function to_uint8
+	meta "remove_unused:dependency" lemma id_uint16, function to_uint16
+	meta "remove_unused:dependency" lemma id_uint32, function to_uint32
+	meta "remove_unused:dependency" lemma id_uint64, function to_uint64
+	meta "remove_unused:dependency" axiom id_sint8,  function to_sint8
+	meta "remove_unused:dependency" axiom id_sint16, function to_sint16
+	meta "remove_unused:dependency" axiom id_sint32, function to_sint32
+	meta "remove_unused:dependency" axiom id_sint64, function to_sint64
+
+	lemma proj_uint8  : forall x:int [ to_uint8  (to_uint8  x) ]. to_uint8  (to_uint8  x) = to_uint8  x
+	lemma proj_sint8  : forall x:int [ to_sint8  (to_sint8  x) ]. to_sint8  (to_sint8  x) = to_sint8  x
+	lemma proj_uint16 : forall x:int [ to_uint16 (to_uint16 x) ]. to_uint16 (to_uint16 x) = to_uint16 x
+	lemma proj_sint16 : forall x:int [ to_sint16 (to_sint16 x) ]. to_sint16 (to_sint16 x) = to_sint16 x
+	lemma proj_uint32 : forall x:int [ to_uint32 (to_uint32 x) ]. to_uint32 (to_uint32 x) = to_uint32 x
+	lemma proj_sint32 : forall x:int [ to_sint32 (to_sint32 x) ]. to_sint32 (to_sint32 x) = to_sint32 x
+	lemma proj_uint64 : forall x:int [ to_uint64 (to_uint64 x) ]. to_uint64 (to_uint64 x) = to_uint64 x
+	lemma proj_sint64 : forall x:int [ to_sint64 (to_sint64 x) ]. to_sint64 (to_sint64 x) = to_sint64 x
+	meta "remove_unused:dependency" lemma proj_uint8,  function to_uint8
+	meta "remove_unused:dependency" lemma proj_uint16, function to_uint16
+	meta "remove_unused:dependency" lemma proj_uint32, function to_uint32
+	meta "remove_unused:dependency" lemma proj_uint64, function to_uint64
+	meta "remove_unused:dependency" lemma proj_sint8,  function to_sint8
+	meta "remove_unused:dependency" lemma proj_sint16, function to_sint16
+	meta "remove_unused:dependency" lemma proj_sint32, function to_sint32
+	meta "remove_unused:dependency" lemma proj_sint64, function to_sint64
+
+	lemma uint8_upcast_1:  forall x:int. is_uint8 x  -> to_uint16 x = x
+	lemma uint8_upcast_2:  forall x:int. is_uint8 x  -> to_sint16 x = x
+	lemma uint8_upcast_3:  forall x:int. is_uint8 x  -> to_uint32 x = x
+	lemma uint8_upcast_4:  forall x:int. is_uint8 x  -> to_sint32 x = x
+	lemma uint8_upcast_5:  forall x:int. is_uint8 x  -> to_uint64 x = x
+	lemma uint8_upcast_6:  forall x:int. is_uint8 x  -> to_sint64 x = x
+	meta "remove_unused:dependency" lemma uint8_upcast_1, function to_uint16
+	meta "remove_unused:dependency" lemma uint8_upcast_2, function to_sint16
+	meta "remove_unused:dependency" lemma uint8_upcast_3, function to_uint32
+	meta "remove_unused:dependency" lemma uint8_upcast_4, function to_sint32
+	meta "remove_unused:dependency" lemma uint8_upcast_5, function to_uint64
+	meta "remove_unused:dependency" lemma uint8_upcast_6, function to_sint64
+
+	lemma sint8_upcast_1:  forall x:int. is_sint8 x  -> to_sint16 x = x
+	lemma sint8_upcast_2:  forall x:int. is_sint8 x  -> to_sint32 x = x
+	lemma sint8_upcast_3:  forall x:int. is_sint8 x  -> to_sint64 x = x
+	meta "remove_unused:dependency" lemma sint8_upcast_1, function to_sint16
+	meta "remove_unused:dependency" lemma sint8_upcast_2, function to_sint32
+	meta "remove_unused:dependency" lemma sint8_upcast_3, function to_sint64
+
+	lemma uint16_upcast_1: forall x:int. is_uint16 x -> to_uint32 x = x
+	lemma uint16_upcast_2: forall x:int. is_uint16 x -> to_sint32 x = x
+	lemma uint16_upcast_3: forall x:int. is_uint16 x -> to_uint64 x = x
+	lemma uint16_upcast_4: forall x:int. is_uint16 x -> to_sint64 x = x
+	meta "remove_unused:dependency" lemma uint16_upcast_1, function to_uint32
+	meta "remove_unused:dependency" lemma uint16_upcast_2, function to_sint32
+	meta "remove_unused:dependency" lemma uint16_upcast_3, function to_uint64
+	meta "remove_unused:dependency" lemma uint16_upcast_4, function to_sint64
+
+	lemma sint16_upcast_1: forall x:int. is_sint16 x -> to_sint32 x = x
+	lemma sint16_upcast_2: forall x:int. is_sint16 x -> to_sint64 x = x
+	meta "remove_unused:dependency" lemma sint16_upcast_1, function to_sint32
+	meta "remove_unused:dependency" lemma sint16_upcast_2, function to_sint64
+
+	lemma uint32_upcast_1: forall x:int. is_uint32 x -> to_uint64 x = x
+	lemma uint32_upcast_2: forall x:int. is_uint32 x -> to_sint64 x = x
+	meta "remove_unused:dependency" lemma uint32_upcast_1, function to_uint64
+	meta "remove_unused:dependency" lemma uint32_upcast_2, function to_sint64
+
+	lemma sint32_upcast_1: forall x:int. is_sint32 x -> to_sint64 x = x
+	meta "remove_unused:dependency" lemma sint32_upcast_1, function to_sint64
+
+	let lemma uint8_downcast (x : int)
+	ensures { to_uint8 x = EuclideanDivision.mod x max_uint8 }
+	=
+		let to_result = to_uint8 x in
+		let ref prog_result = x in
+		while not is_uint8 prog_result do
+			invariant { to_uint8 prog_result = to_result }
+			invariant { exists mul:int. prog_result + mul * max_uint8 = x }
+			variant { if prog_result < 0 then abs(prog_result) + max_uint8 else prog_result }
+			if prog_result < 0
+				then prog_result <- prog_result + max_uint8
+				else prog_result <- prog_result - max_uint8
+		done;
+		assert { prog_result = to_result };
+		assert { prog_result = EuclideanDivision.mod x max_uint8 }
+
+	let lemma uint16_downcast (x : int)
+	ensures { to_uint16 x = EuclideanDivision.mod x max_uint16 }
+	=
+		let to_result = to_uint16 x in
+		let ref prog_result = x in
+		while not is_uint16 prog_result do
+			invariant { to_uint16 prog_result = to_result }
+			invariant { exists mul:int. prog_result + mul * max_uint16 = x }
+			variant { if prog_result < 0 then abs(prog_result) + max_uint16 else prog_result }
+			if prog_result < 0
+				then prog_result <- prog_result + max_uint16
+				else prog_result <- prog_result - max_uint16
+		done;
+		assert { prog_result = to_result };
+		assert { prog_result = EuclideanDivision.mod x max_uint16 }
+
+	let lemma uint32_downcast (x : int)
+	ensures { to_uint32 x = EuclideanDivision.mod x max_uint32 }
+	=
+		let to_result = to_uint32 x in
+		let ref prog_result = x in
+		while not is_uint32 prog_result do
+			invariant { to_uint32 prog_result = to_result }
+			invariant { exists mul:int. prog_result + mul * max_uint32 = x }
+			variant { if prog_result < 0 then abs(prog_result) + max_uint32 else prog_result }
+			if prog_result < 0
+				then prog_result <- prog_result + max_uint32
+				else prog_result <- prog_result - max_uint32
+		done;
+		assert { prog_result = to_result };
+		assert { prog_result = EuclideanDivision.mod x max_uint32 }
+
+	let lemma uint64_downcast (x : int)
+	ensures { to_uint64 x = EuclideanDivision.mod x max_uint64 }
+	=
+		let to_result = to_uint64 x in
+		let ref prog_result = x in
+		while not is_uint64 prog_result do
+			invariant { to_uint64 prog_result = to_result }
+			invariant { exists mul:int. prog_result + mul * max_uint64 = x }
+			variant { if prog_result < 0 then abs(prog_result) + max_uint64 else prog_result }
+			if prog_result < 0
+				then prog_result <- prog_result + max_uint64
+				else prog_result <- prog_result - max_uint64
+		done;
+		assert { prog_result = to_result };
+		assert { prog_result = EuclideanDivision.mod x max_uint64 }
+
+	let function and_s8  (a b : int) : int = BV8.to_int   (BV8.bw_and  (BV8.of_int  (to_uint8  a)) (BV8.of_int  (to_uint8  b)))
+	let function and_s16 (a b : int) : int = BV16.to_int  (BV16.bw_and (BV16.of_int (to_uint16 a)) (BV16.of_int (to_uint16 b)))
+	let function and_s32 (a b : int) : int = BV32.to_int  (BV32.bw_and (BV32.of_int (to_uint32 a)) (BV32.of_int (to_uint32 b)))
+	let function and_s64 (a b : int) : int = BV64.to_int  (BV64.bw_and (BV64.of_int (to_uint64 a)) (BV64.of_int (to_uint64 b)))
+	let function and_u8  (a b : int) : int = BV8.to_uint  (BV8.bw_and  (BV8.of_int  (to_uint8  a)) (BV8.of_int  (to_uint8  b)))
+	let function and_u16 (a b : int) : int = BV16.to_uint (BV16.bw_and (BV16.of_int (to_uint16 a)) (BV16.of_int (to_uint16 b)))
+	let function and_u32 (a b : int) : int = BV32.to_uint (BV32.bw_and (BV32.of_int (to_uint32 a)) (BV32.of_int (to_uint32 b)))
+	let function and_u64 (a b : int) : int = BV64.to_uint (BV64.bw_and (BV64.of_int (to_uint64 a)) (BV64.of_int (to_uint64 b)))
+
+	lemma and_preserves_sint8:  forall x:int, y:int. is_sint8  (and_s8  x y)
+	lemma and_preserves_uint8:  forall x:int, y:int. is_uint8  (and_u8  x y)
+	lemma and_preserves_sint16: forall x:int, y:int. is_sint16 (and_s16 x y)
+	lemma and_preserves_uint16: forall x:int, y:int. is_uint16 (and_u16 x y)
+	lemma and_preserves_sint32: forall x:int, y:int. is_sint32 (and_s32 x y)
+	lemma and_preserves_uint32: forall x:int, y:int. is_uint32 (and_u32 x y)
+	lemma and_preserves_sint64: forall x:int, y:int. is_sint64 (and_s64 x y)
+	lemma and_preserves_uint64: forall x:int, y:int. is_uint64 (and_u64 x y)
+	meta "remove_unused:dependency" lemma and_preserves_sint8,  function and_s8
+	meta "remove_unused:dependency" lemma and_preserves_sint16, function and_s16
+	meta "remove_unused:dependency" lemma and_preserves_sint32, function and_s32
+	meta "remove_unused:dependency" lemma and_preserves_sint64, function and_s64
+	meta "remove_unused:dependency" lemma and_preserves_uint8,  function and_u8
+	meta "remove_unused:dependency" lemma and_preserves_uint16, function and_u16
+	meta "remove_unused:dependency" lemma and_preserves_uint32, function and_u32
+	meta "remove_unused:dependency" lemma and_preserves_uint64, function and_u64
+
+	let function or_s8  (a b : int) : int = BV8.to_int   (BV8.bw_or  (BV8.of_int  (to_uint8  a)) (BV8.of_int  (to_uint8  b)))
+	let function or_s16 (a b : int) : int = BV16.to_int  (BV16.bw_or (BV16.of_int (to_uint16 a)) (BV16.of_int (to_uint16 b)))
+	let function or_s32 (a b : int) : int = BV32.to_int  (BV32.bw_or (BV32.of_int (to_uint32 a)) (BV32.of_int (to_uint32 b)))
+	let function or_s64 (a b : int) : int = BV64.to_int  (BV64.bw_or (BV64.of_int (to_uint64 a)) (BV64.of_int (to_uint64 b)))
+	let function or_u8  (a b : int) : int = BV8.to_uint  (BV8.bw_or  (BV8.of_int  (to_uint8  a)) (BV8.of_int  (to_uint8  b)))
+	let function or_u16 (a b : int) : int = BV16.to_uint (BV16.bw_or (BV16.of_int (to_uint16 a)) (BV16.of_int (to_uint16 b)))
+	let function or_u32 (a b : int) : int = BV32.to_uint (BV32.bw_or (BV32.of_int (to_uint32 a)) (BV32.of_int (to_uint32 b)))
+	let function or_u64 (a b : int) : int = BV64.to_uint (BV64.bw_or (BV64.of_int (to_uint64 a)) (BV64.of_int (to_uint64 b)))
+
+	lemma or_preserves_sint8:  forall x:int, y:int. is_sint8  (or_s8  x y)
+	lemma or_preserves_uint8:  forall x:int, y:int. is_uint8  (or_u8  x y)
+	lemma or_preserves_sint16: forall x:int, y:int. is_sint16 (or_s16 x y)
+	lemma or_preserves_uint16: forall x:int, y:int. is_uint16 (or_u16 x y)
+	lemma or_preserves_sint32: forall x:int, y:int. is_sint32 (or_s32 x y)
+	lemma or_preserves_uint32: forall x:int, y:int. is_uint32 (or_u32 x y)
+	lemma or_preserves_sint64: forall x:int, y:int. is_sint64 (or_s64 x y)
+	lemma or_preserves_uint64: forall x:int, y:int. is_uint64 (or_u64 x y)
+	meta "remove_unused:dependency" lemma or_preserves_sint8,  function or_s8
+	meta "remove_unused:dependency" lemma or_preserves_sint16, function or_s16
+	meta "remove_unused:dependency" lemma or_preserves_sint32, function or_s32
+	meta "remove_unused:dependency" lemma or_preserves_sint64, function or_s64
+	meta "remove_unused:dependency" lemma or_preserves_uint8,  function or_u8
+	meta "remove_unused:dependency" lemma or_preserves_uint16, function or_u16
+	meta "remove_unused:dependency" lemma or_preserves_uint32, function or_u32
+	meta "remove_unused:dependency" lemma or_preserves_uint64, function or_u64
+
+	let function xor_s8  (a b : int) : int = BV8.to_int   (BV8.bw_xor  (BV8.of_int  (to_uint8  a)) (BV8.of_int  (to_uint8  b)))
+	let function xor_s16 (a b : int) : int = BV16.to_int  (BV16.bw_xor (BV16.of_int (to_uint16 a)) (BV16.of_int (to_uint16 b)))
+	let function xor_s32 (a b : int) : int = BV32.to_int  (BV32.bw_xor (BV32.of_int (to_uint32 a)) (BV32.of_int (to_uint32 b)))
+	let function xor_s64 (a b : int) : int = BV64.to_int  (BV64.bw_xor (BV64.of_int (to_uint64 a)) (BV64.of_int (to_uint64 b)))
+	let function xor_u8  (a b : int) : int = BV8.to_uint  (BV8.bw_xor  (BV8.of_int  (to_uint8  a)) (BV8.of_int  (to_uint8  b)))
+	let function xor_u16 (a b : int) : int = BV16.to_uint (BV16.bw_xor (BV16.of_int (to_uint16 a)) (BV16.of_int (to_uint16 b)))
+	let function xor_u32 (a b : int) : int = BV32.to_uint (BV32.bw_xor (BV32.of_int (to_uint32 a)) (BV32.of_int (to_uint32 b)))
+	let function xor_u64 (a b : int) : int = BV64.to_uint (BV64.bw_xor (BV64.of_int (to_uint64 a)) (BV64.of_int (to_uint64 b)))
+
+	lemma xor_preserves_sint8:  forall x:int, y:int. is_sint8  (xor_s8  x y)
+	lemma xor_preserves_uint8:  forall x:int, y:int. is_uint8  (xor_u8  x y)
+	lemma xor_preserves_sint16: forall x:int, y:int. is_sint16 (xor_s16 x y)
+	lemma xor_preserves_uint16: forall x:int, y:int. is_uint16 (xor_u16 x y)
+	lemma xor_preserves_sint32: forall x:int, y:int. is_sint32 (xor_s32 x y)
+	lemma xor_preserves_uint32: forall x:int, y:int. is_uint32 (xor_u32 x y)
+	lemma xor_preserves_sint64: forall x:int, y:int. is_sint64 (xor_s64 x y)
+	lemma xor_preserves_uint64: forall x:int, y:int. is_uint64 (xor_u64 x y)
+	meta "remove_unused:dependency" lemma xor_preserves_sint8,  function xor_s8
+	meta "remove_unused:dependency" lemma xor_preserves_sint16, function xor_s16
+	meta "remove_unused:dependency" lemma xor_preserves_sint32, function xor_s32
+	meta "remove_unused:dependency" lemma xor_preserves_sint64, function xor_s64
+	meta "remove_unused:dependency" lemma xor_preserves_uint8,  function xor_u8
+	meta "remove_unused:dependency" lemma xor_preserves_uint16, function xor_u16
+	meta "remove_unused:dependency" lemma xor_preserves_uint32, function xor_u32
+	meta "remove_unused:dependency" lemma xor_preserves_uint64, function xor_u64
+	
+	let function lsl_s8  (a b : int) : int = BV8.to_int   (BV8.lsl_bv  (BV8.of_int  (to_uint8  a)) (BV8.of_int  (to_uint8  b)))
+	let function lsl_s16 (a b : int) : int = BV16.to_int  (BV16.lsl_bv (BV16.of_int (to_uint16 a)) (BV16.of_int (to_uint16 b)))
+	let function lsl_s32 (a b : int) : int = BV32.to_int  (BV32.lsl_bv (BV32.of_int (to_uint32 a)) (BV32.of_int (to_uint32 b)))
+	let function lsl_s64 (a b : int) : int = BV64.to_int  (BV64.lsl_bv (BV64.of_int (to_uint64 a)) (BV64.of_int (to_uint64 b)))
+	let function lsl_u8  (a b : int) : int = BV8.to_uint  (BV8.lsl_bv  (BV8.of_int  (to_uint8  a)) (BV8.of_int  (to_uint8  b)))
+	let function lsl_u16 (a b : int) : int = BV16.to_uint (BV16.lsl_bv (BV16.of_int (to_uint16 a)) (BV16.of_int (to_uint16 b)))
+	let function lsl_u32 (a b : int) : int = BV32.to_uint (BV32.lsl_bv (BV32.of_int (to_uint32 a)) (BV32.of_int (to_uint32 b)))
+	let function lsl_u64 (a b : int) : int = BV64.to_uint (BV64.lsl_bv (BV64.of_int (to_uint64 a)) (BV64.of_int (to_uint64 b)))
+
+	lemma lsl_u8_alt_def: forall x:int, y:int [lsl_u8 x y].
+		is_uint8 x /\ is_uint8 y -> lsl_u8 x y = to_uint8 (x * (pow2 y))
+	lemma lsl_u16_alt_def: forall x:int, y:int [lsl_u16 x y].
+		is_uint16 x /\ is_uint8 y -> lsl_u16 x y = to_uint16 (x * (pow2 y))
+	lemma lsl_u32_alt_def: forall x:int, y:int [lsl_u32 x y].
+		is_uint32 x /\ is_uint8 y -> lsl_u32 x y = to_uint32 (x * (pow2 y))
+	lemma lsl_u64_alt_def: forall x:int, y:int [lsl_u64 x y].
+		is_uint64 x /\ is_uint8 y -> lsl_u64 x y = to_uint64 (x * (pow2 y))
+	meta "remove_unused:dependency" lemma lsl_u8_alt_def,  function lsl_u8
+	meta "remove_unused:dependency" lemma lsl_u16_alt_def, function lsl_u16
+	meta "remove_unused:dependency" lemma lsl_u32_alt_def, function lsl_u32
+	meta "remove_unused:dependency" lemma lsl_u64_alt_def, function lsl_u64
+
+	lemma lsl_preserves_sint8:  forall x:int, y:int. is_sint8  (lsl_s8  x y)
+	lemma lsl_preserves_uint8:  forall x:int, y:int. is_uint8  (lsl_u8  x y)
+	lemma lsl_preserves_sint16: forall x:int, y:int. is_sint16 (lsl_s16 x y)
+	lemma lsl_preserves_uint16: forall x:int, y:int. is_uint16 (lsl_u16 x y)
+	lemma lsl_preserves_sint32: forall x:int, y:int. is_sint32 (lsl_s32 x y)
+	lemma lsl_preserves_uint32: forall x:int, y:int. is_uint32 (lsl_u32 x y)
+	lemma lsl_preserves_sint64: forall x:int, y:int. is_sint64 (lsl_s64 x y)
+	lemma lsl_preserves_uint64: forall x:int, y:int. is_uint64 (lsl_u64 x y)
+	meta "remove_unused:dependency" lemma lsl_preserves_sint8,  function lsl_s8
+	meta "remove_unused:dependency" lemma lsl_preserves_sint16, function lsl_s16
+	meta "remove_unused:dependency" lemma lsl_preserves_sint32, function lsl_s32
+	meta "remove_unused:dependency" lemma lsl_preserves_sint64, function lsl_s64
+	meta "remove_unused:dependency" lemma lsl_preserves_uint8,  function lsl_u8
+	meta "remove_unused:dependency" lemma lsl_preserves_uint16, function lsl_u16
+	meta "remove_unused:dependency" lemma lsl_preserves_uint32, function lsl_u32
+	meta "remove_unused:dependency" lemma lsl_preserves_uint64, function lsl_u64
+
+	let function lsr_s8  (a b : int) : int = BV8.to_int   (BV8.lsr_bv  (BV8.of_int  (to_uint8  a)) (BV8.of_int  (to_uint8  b)))
+	let function lsr_s16 (a b : int) : int = BV16.to_int  (BV16.lsr_bv (BV16.of_int (to_uint16 a)) (BV16.of_int (to_uint16 b)))
+	let function lsr_s32 (a b : int) : int = BV32.to_int  (BV32.lsr_bv (BV32.of_int (to_uint32 a)) (BV32.of_int (to_uint32 b)))
+	let function lsr_s64 (a b : int) : int = BV64.to_int  (BV64.lsr_bv (BV64.of_int (to_uint64 a)) (BV64.of_int (to_uint64 b)))
+	let function lsr_u8  (a b : int) : int = BV8.to_uint  (BV8.lsr_bv  (BV8.of_int  (to_uint8  a)) (BV8.of_int  (to_uint8  b)))
+	let function lsr_u16 (a b : int) : int = BV16.to_uint (BV16.lsr_bv (BV16.of_int (to_uint16 a)) (BV16.of_int (to_uint16 b)))
+	let function lsr_u32 (a b : int) : int = BV32.to_uint (BV32.lsr_bv (BV32.of_int (to_uint32 a)) (BV32.of_int (to_uint32 b)))
+	let function lsr_u64 (a b : int) : int = BV64.to_uint (BV64.lsr_bv (BV64.of_int (to_uint64 a)) (BV64.of_int (to_uint64 b)))
+
+	lemma lsr_u8_alt_def: forall x:int, y:int [lsr_u8 x y].
+		is_uint8 x /\ is_uint8 y -> lsr_u8 x y = EuclideanDivision.div x (pow2 y)
+	lemma lsr_u16_alt_def: forall x:int, y:int [lsr_u16 x y].
+		is_uint16 x /\ is_uint16 y -> lsr_u16 x y = EuclideanDivision.div x (pow2 y)
+	lemma lsr_u32_alt_def: forall x:int, y:int [lsr_u32 x y].
+		is_uint32 x /\ is_uint32 y -> lsr_u32 x y = EuclideanDivision.div x (pow2 y)
+	lemma lsr_u64_alt_def: forall x:int, y:int [lsr_u64 x y].
+		is_uint64 x /\ is_uint64 y -> lsr_u64 x y = EuclideanDivision.div x (pow2 y)
+	meta "remove_unused:dependency" lemma lsr_u8_alt_def,  function lsr_u8
+	meta "remove_unused:dependency" lemma lsr_u16_alt_def, function lsr_u16
+	meta "remove_unused:dependency" lemma lsr_u32_alt_def, function lsr_u32
+	meta "remove_unused:dependency" lemma lsr_u64_alt_def, function lsr_u64
+
+	lemma lsr_preserves_sint8:  forall x:int, y:int. is_sint8  (lsr_s8  x y)
+	lemma lsr_preserves_uint8:  forall x:int, y:int. is_uint8  (lsr_u8  x y)
+	lemma lsr_preserves_sint16: forall x:int, y:int. is_sint16 (lsr_s16 x y)
+	lemma lsr_preserves_uint16: forall x:int, y:int. is_uint16 (lsr_u16 x y)
+	lemma lsr_preserves_sint32: forall x:int, y:int. is_sint32 (lsr_s32 x y)
+	lemma lsr_preserves_uint32: forall x:int, y:int. is_uint32 (lsr_u32 x y)
+	lemma lsr_preserves_sint64: forall x:int, y:int. is_sint64 (lsr_s64 x y)
+	lemma lsr_preserves_uint64: forall x:int, y:int. is_uint64 (lsr_u64 x y)
+	meta "remove_unused:dependency" lemma lsr_preserves_sint8,  function lsr_s8
+	meta "remove_unused:dependency" lemma lsr_preserves_sint16, function lsr_s16
+	meta "remove_unused:dependency" lemma lsr_preserves_sint32, function lsr_s32
+	meta "remove_unused:dependency" lemma lsr_preserves_sint64, function lsr_s64
+	meta "remove_unused:dependency" lemma lsr_preserves_uint8,  function lsr_u8
+	meta "remove_unused:dependency" lemma lsr_preserves_uint16, function lsr_u16
+	meta "remove_unused:dependency" lemma lsr_preserves_uint32, function lsr_u32
+	meta "remove_unused:dependency" lemma lsr_preserves_uint64, function lsr_u64
+
+	let function asr_s8  (a b : int) : int = BV8.to_int   (BV8.asr_bv  (BV8.of_int  (to_uint8  a)) (BV8.of_int  (to_uint8  b)))
+	let function asr_s16 (a b : int) : int = BV16.to_int  (BV16.asr_bv (BV16.of_int (to_uint16 a)) (BV16.of_int (to_uint16 b)))
+	let function asr_s32 (a b : int) : int = BV32.to_int  (BV32.asr_bv (BV32.of_int (to_uint32 a)) (BV32.of_int (to_uint32 b)))
+	let function asr_s64 (a b : int) : int = BV64.to_int  (BV64.asr_bv (BV64.of_int (to_uint64 a)) (BV64.of_int (to_uint64 b)))
+	let function asr_u8  (a b : int) : int = BV8.to_uint  (BV8.asr_bv  (BV8.of_int  (to_uint8  a)) (BV8.of_int  (to_uint8  b)))
+	let function asr_u16 (a b : int) : int = BV16.to_uint (BV16.asr_bv (BV16.of_int (to_uint16 a)) (BV16.of_int (to_uint16 b)))
+	let function asr_u32 (a b : int) : int = BV32.to_uint (BV32.asr_bv (BV32.of_int (to_uint32 a)) (BV32.of_int (to_uint32 b)))
+	let function asr_u64 (a b : int) : int = BV64.to_uint (BV64.asr_bv (BV64.of_int (to_uint64 a)) (BV64.of_int (to_uint64 b)))
+
+	lemma asr_preserves_sint8:  forall x:int, y:int. is_sint8  (asr_s8  x y)
+	lemma asr_preserves_uint8:  forall x:int, y:int. is_uint8  (asr_u8  x y)
+	lemma asr_preserves_sint16: forall x:int, y:int. is_sint16 (asr_s16 x y)
+	lemma asr_preserves_uint16: forall x:int, y:int. is_uint16 (asr_u16 x y)
+	lemma asr_preserves_sint32: forall x:int, y:int. is_sint32 (asr_s32 x y)
+	lemma asr_preserves_uint32: forall x:int, y:int. is_uint32 (asr_u32 x y)
+	lemma asr_preserves_sint64: forall x:int, y:int. is_sint64 (asr_s64 x y)
+	lemma asr_preserves_uint64: forall x:int, y:int. is_uint64 (asr_u64 x y)
+	meta "remove_unused:dependency" lemma asr_preserves_sint8,  function asr_s8
+	meta "remove_unused:dependency" lemma asr_preserves_sint16, function asr_s16
+	meta "remove_unused:dependency" lemma asr_preserves_sint32, function asr_s32
+	meta "remove_unused:dependency" lemma asr_preserves_sint64, function asr_s64
+	meta "remove_unused:dependency" lemma asr_preserves_uint8,  function asr_u8
+	meta "remove_unused:dependency" lemma asr_preserves_uint16, function asr_u16
+	meta "remove_unused:dependency" lemma asr_preserves_uint32, function asr_u32
+	meta "remove_unused:dependency" lemma asr_preserves_uint64, function asr_u64
+
+	let function neg_s8  (a : int) : int = BV8.to_int   (BV8.bw_not  (BV8.of_int  (to_uint8  a)))
+	let function neg_s16 (a : int) : int = BV16.to_int  (BV16.bw_not (BV16.of_int (to_uint16 a)))
+	let function neg_s32 (a : int) : int = BV32.to_int  (BV32.bw_not (BV32.of_int (to_uint32 a)))
+	let function neg_s64 (a : int) : int = BV64.to_int  (BV64.bw_not (BV64.of_int (to_uint64 a)))
+	let function neg_u8  (a : int) : int = BV8.to_uint  (BV8.bw_not  (BV8.of_int  (to_uint8  a)))
+	let function neg_u16 (a : int) : int = BV16.to_uint (BV16.bw_not (BV16.of_int (to_uint16 a)))
+	let function neg_u32 (a : int) : int = BV32.to_uint (BV32.bw_not (BV32.of_int (to_uint32 a)))
+	let function neg_u64 (a : int) : int = BV64.to_uint (BV64.bw_not (BV64.of_int (to_uint64 a)))
+
+	lemma neg_preserves_sint8:  forall x:int. is_sint8  (neg_s8  x)
+	lemma neg_preserves_uint8:  forall x:int. is_uint8  (neg_u8  x)
+	lemma neg_preserves_sint16: forall x:int. is_sint16 (neg_s16 x)
+	lemma neg_preserves_uint16: forall x:int. is_uint16 (neg_u16 x)
+	lemma neg_preserves_sint32: forall x:int. is_sint32 (neg_s32 x)
+	lemma neg_preserves_uint32: forall x:int. is_uint32 (neg_u32 x)
+	lemma neg_preserves_sint64: forall x:int. is_sint64 (neg_s64 x)
+	lemma neg_preserves_uint64: forall x:int. is_uint64 (neg_u64 x)
+	meta "remove_unused:dependency" lemma neg_preserves_sint8,  function neg_s8
+	meta "remove_unused:dependency" lemma neg_preserves_sint16, function neg_s16
+	meta "remove_unused:dependency" lemma neg_preserves_sint32, function neg_s32
+	meta "remove_unused:dependency" lemma neg_preserves_sint64, function neg_s64
+	meta "remove_unused:dependency" lemma neg_preserves_uint8,  function neg_u8
+	meta "remove_unused:dependency" lemma neg_preserves_uint16, function neg_u16
+	meta "remove_unused:dependency" lemma neg_preserves_uint32, function neg_u32
+	meta "remove_unused:dependency" lemma neg_preserves_uint64, function neg_u64
+
+	lemma neg_u8_alt_def:  forall x:int [neg_u8  x]. is_uint8  x -> (neg_u8  x = max_uint8  - x - 1)
+	lemma neg_u16_alt_def: forall x:int [neg_u16 x]. is_uint16 x -> (neg_u16 x = max_uint16 - x - 1)
+	lemma neg_u32_alt_def: forall x:int [neg_u32 x]. is_uint32 x -> (neg_u32 x = max_uint32 - x - 1 by
+		BV32.t'int (BV32.bw_not (BV32.of_int x)) = 4294967295 - x by
+		BV32.bw_not (BV32.of_int x) = BV32.sub (4294967295 : BV32.t) (BV32.of_int x) by
+		BV32.of_int x = BV32.of_int (to_uint32 x))
+	lemma neg_u64_alt_def: forall x:int [neg_u64 x]. is_uint32 x -> (neg_u64 x = max_uint64 - x - 1 by
+		BV64.t'int (BV64.bw_not (BV64.of_int x)) = 18446744073709551615 - x by
+		BV64.bw_not (BV64.of_int x) = BV64.sub (18446744073709551615 : BV64.t) (BV64.of_int x) by
+		BV64.of_int x = BV64.of_int (to_uint64 x))
+	meta "remove_unused:dependency" lemma neg_u8_alt_def,  function neg_u8
+	meta "remove_unused:dependency" lemma neg_u16_alt_def, function neg_u16
+	meta "remove_unused:dependency" lemma neg_u32_alt_def, function neg_u32
+	meta "remove_unused:dependency" lemma neg_u64_alt_def, function neg_u64
+
+	let function nth_8  (a b : int) : bool = BV8.nth_bv  (BV8.of_int  (to_uint8  a)) (BV8.of_int  (to_uint8  b)) 
+	let function nth_16 (a b : int) : bool = BV16.nth_bv (BV16.of_int (to_uint16 a)) (BV16.of_int (to_uint16 b)) 
+	let function nth_32 (a b : int) : bool = BV32.nth_bv (BV32.of_int (to_uint32 a)) (BV32.of_int (to_uint32 b)) 
+	let function nth_64 (a b : int) : bool = BV64.nth_bv (BV64.of_int (to_uint64 a)) (BV64.of_int (to_uint64 b)) 
+
+	let function ineg_s8  (a : int) : int = to_sint8  (-a)
+	let function ineg_s16 (a : int) : int = to_sint16 (-a)
+	let function ineg_s32 (a : int) : int = to_sint32 (-a)
+	let function ineg_s64 (a : int) : int = to_sint64 (-a)
+	let function ineg_u8  (a : int) : int = to_uint8  (max_uint8  - a)
+	let function ineg_u16 (a : int) : int = to_uint16 (max_uint16 - a)
+	let function ineg_u32 (a : int) : int = to_uint32 (max_uint32 - a)
+	let function ineg_u64 (a : int) : int = to_uint64 (max_uint64 - a)
+
+	lemma ineg_sint8_is_ineg:  forall x:int. is_sint8  x /\ x <> -max_sint8  -> ineg_s8  x = -x
+	lemma ineg_sint16_is_ineg: forall x:int. is_sint16 x /\ x <> -max_sint16 -> ineg_s16 x = -x
+	lemma ineg_sint32_is_ineg: forall x:int. is_sint32 x /\ x <> -max_sint32 -> ineg_s32 x = -x
+	lemma ineg_sint64_is_ineg: forall x:int. is_sint64 x /\ x <> -max_sint64 -> ineg_s64 x = -x
+	lemma ineg_uint8_is_ineg:  forall x:int. is_uint8  x -> ineg_u8  x = (if x = 0 then 0 else max_uint8  - x)
+	lemma ineg_uint16_is_ineg: forall x:int. is_uint16 x -> ineg_u16 x = (if x = 0 then 0 else max_uint16 - x)
+	lemma ineg_uint32_is_ineg: forall x:int. is_uint32 x -> ineg_u32 x = (if x = 0 then 0 else max_uint32 - x)
+	lemma ineg_uint64_is_ineg: forall x:int. is_uint64 x -> ineg_u64 x = (if x = 0 then 0 else max_uint64 - x)
+	meta "remove_unused:dependency" lemma ineg_sint8_is_ineg,  function ineg_s8
+	meta "remove_unused:dependency" lemma ineg_sint16_is_ineg, function ineg_s16
+	meta "remove_unused:dependency" lemma ineg_sint32_is_ineg, function ineg_s32
+	meta "remove_unused:dependency" lemma ineg_sint64_is_ineg, function ineg_s64
+	meta "remove_unused:dependency" lemma ineg_uint8_is_ineg,  function ineg_u8
+	meta "remove_unused:dependency" lemma ineg_uint16_is_ineg, function ineg_u16
+	meta "remove_unused:dependency" lemma ineg_uint32_is_ineg, function ineg_u32
+	meta "remove_unused:dependency" lemma ineg_uint64_is_ineg, function ineg_u64
+
+	let function add_s8  (a b : int) : int = to_sint8  (a + b)
+	let function add_s16 (a b : int) : int = to_sint16 (a + b)
+	let function add_s32 (a b : int) : int = to_sint32 (a + b)
+	let function add_s64 (a b : int) : int = to_sint64 (a + b)
+	let function add_u8  (a b : int) : int = to_uint8  (a + b)
+	let function add_u16 (a b : int) : int = to_uint16 (a + b)
+	let function add_u32 (a b : int) : int = to_uint32 (a + b)
+	let function add_u64 (a b : int) : int = to_uint64 (a + b)
+
+	lemma add_sint8_is_add:  forall x:int, y:int. is_sint8  (x + y) <-> add_s8  x y = x + y
+	lemma add_sint16_is_add: forall x:int, y:int. is_sint16 (x + y) <-> add_s16 x y = x + y
+	lemma add_sint32_is_add: forall x:int, y:int. is_sint32 (x + y) <-> add_s32 x y = x + y
+	lemma add_sint64_is_add: forall x:int, y:int. is_sint64 (x + y) <-> add_s64 x y = x + y
+	lemma add_uint8_is_add:  forall x:int, y:int. is_uint8  (x + y) <-> add_u8  x y = x + y
+	lemma add_uint16_is_add: forall x:int, y:int. is_uint16 (x + y) <-> add_u16 x y = x + y
+	lemma add_uint32_is_add: forall x:int, y:int. is_uint32 (x + y) <-> add_u32 x y = x + y
+	lemma add_uint64_is_add: forall x:int, y:int. is_uint64 (x + y) <-> add_u64 x y = x + y
+	meta "remove_unused:dependency" lemma add_sint8_is_add,  function add_s8
+	meta "remove_unused:dependency" lemma add_sint16_is_add, function add_s16
+	meta "remove_unused:dependency" lemma add_sint32_is_add, function add_s32
+	meta "remove_unused:dependency" lemma add_sint64_is_add, function add_s64
+	meta "remove_unused:dependency" lemma add_uint8_is_add,  function add_u8
+	meta "remove_unused:dependency" lemma add_uint16_is_add, function add_u16
+	meta "remove_unused:dependency" lemma add_uint32_is_add, function add_u32
+	meta "remove_unused:dependency" lemma add_uint64_is_add, function add_u64
+
+	let function sub_s8  (a b : int) : int = to_sint8  (a - b)
+	let function sub_s16 (a b : int) : int = to_sint16 (a - b)
+	let function sub_s32 (a b : int) : int = to_sint32 (a - b)
+	let function sub_s64 (a b : int) : int = to_sint64 (a - b)
+	let function sub_u8  (a b : int) : int = to_uint8  (a - b)
+	let function sub_u16 (a b : int) : int = to_uint16 (a - b)
+	let function sub_u32 (a b : int) : int = to_uint32 (a - b)
+	let function sub_u64 (a b : int) : int = to_uint64 (a - b)
+
+	lemma sub_sint8_is_sub:  forall x:int, y:int. is_sint8  (x - y) <-> sub_s8  x y = x - y
+	lemma sub_sint16_is_sub: forall x:int, y:int. is_sint16 (x - y) <-> sub_s16 x y = x - y
+	lemma sub_sint32_is_sub: forall x:int, y:int. is_sint32 (x - y) <-> sub_s32 x y = x - y
+	lemma sub_sint64_is_sub: forall x:int, y:int. is_sint64 (x - y) <-> sub_s64 x y = x - y
+	lemma sub_uint8_is_sub:  forall x:int, y:int. is_uint8  (x - y) <-> sub_u8  x y = x - y
+	lemma sub_uint16_is_sub: forall x:int, y:int. is_uint16 (x - y) <-> sub_u16 x y = x - y
+	lemma sub_uint32_is_sub: forall x:int, y:int. is_uint32 (x - y) <-> sub_u32 x y = x - y
+	lemma sub_uint64_is_sub: forall x:int, y:int. is_uint64 (x - y) <-> sub_u64 x y = x - y
+	meta "remove_unused:dependency" lemma sub_sint8_is_sub,  function sub_s8
+	meta "remove_unused:dependency" lemma sub_sint16_is_sub, function sub_s16
+	meta "remove_unused:dependency" lemma sub_sint32_is_sub, function sub_s32
+	meta "remove_unused:dependency" lemma sub_sint64_is_sub, function sub_s64
+	meta "remove_unused:dependency" lemma sub_uint8_is_sub,  function sub_u8
+	meta "remove_unused:dependency" lemma sub_uint16_is_sub, function sub_u16
+	meta "remove_unused:dependency" lemma sub_uint32_is_sub, function sub_u32
+	meta "remove_unused:dependency" lemma sub_uint64_is_sub, function sub_u64
+
+	let function mul_s8  (a b : int) : int = to_sint8  (a * b)
+	let function mul_s16 (a b : int) : int = to_sint16 (a * b)
+	let function mul_s32 (a b : int) : int = to_sint32 (a * b)
+	let function mul_s64 (a b : int) : int = to_sint64 (a * b)
+	let function mul_u8  (a b : int) : int = to_uint8  (a * b)
+	let function mul_u16 (a b : int) : int = to_uint16 (a * b)
+	let function mul_u32 (a b : int) : int = to_uint32 (a * b)
+	let function mul_u64 (a b : int) : int = to_uint64 (a * b)
+
+	lemma mul_sint8_is_mul:  forall x:int, y:int. is_sint8  (x * y) <-> mul_s8  x y = x * y
+	lemma mul_sint16_is_mul: forall x:int, y:int. is_sint16 (x * y) <-> mul_s16 x y = x * y
+	lemma mul_sint32_is_mul: forall x:int, y:int. is_sint32 (x * y) <-> mul_s32 x y = x * y
+	lemma mul_sint64_is_mul: forall x:int, y:int. is_sint64 (x * y) <-> mul_s64 x y = x * y
+	lemma mul_uint8_is_mul:  forall x:int, y:int. is_uint8  (x * y) <-> mul_u8  x y = x * y
+	lemma mul_uint16_is_mul: forall x:int, y:int. is_uint16 (x * y) <-> mul_u16 x y = x * y
+	lemma mul_uint32_is_mul: forall x:int, y:int. is_uint32 (x * y) <-> mul_u32 x y = x * y
+	lemma mul_uint64_is_mul: forall x:int, y:int. is_uint64 (x * y) <-> mul_u64 x y = x * y
+	meta "remove_unused:dependency" lemma mul_sint8_is_mul,  function mul_s8
+	meta "remove_unused:dependency" lemma mul_sint16_is_mul, function mul_s16
+	meta "remove_unused:dependency" lemma mul_sint32_is_mul, function mul_s32
+	meta "remove_unused:dependency" lemma mul_sint64_is_mul, function mul_s64
+	meta "remove_unused:dependency" lemma mul_uint8_is_mul,  function mul_u8
+	meta "remove_unused:dependency" lemma mul_uint16_is_mul, function mul_u16
+	meta "remove_unused:dependency" lemma mul_uint32_is_mul, function mul_u32
+	meta "remove_unused:dependency" lemma mul_uint64_is_mul, function mul_u64
+
+	let function div_s8  (a b : int) : int requires { [@expl:Not dividing by 0] b <> 0 } = to_sint8  (a / b)
+	let function div_s16 (a b : int) : int requires { [@expl:Not dividing by 0] b <> 0 } = to_sint16 (a / b)
+	let function div_s32 (a b : int) : int requires { [@expl:Not dividing by 0] b <> 0 } = to_sint32 (a / b)
+	let function div_s64 (a b : int) : int requires { [@expl:Not dividing by 0] b <> 0 } = to_sint64 (a / b)
+	let function div_u8  (a b : int) : int requires { [@expl:Not dividing by 0] b <> 0 } = to_uint8  (a / b)
+	let function div_u16 (a b : int) : int requires { [@expl:Not dividing by 0] b <> 0 } = to_uint16 (a / b)
+	let function div_u32 (a b : int) : int requires { [@expl:Not dividing by 0] b <> 0 } = to_uint32 (a / b)
+	let function div_u64 (a b : int) : int requires { [@expl:Not dividing by 0] b <> 0 } = to_uint64 (a / b)
+
+	lemma div_sint8_is_div:  forall x:int, y:int. y <> 0 -> (is_sint8  (x / y) <-> div_s8  x y = x / y)
+	lemma div_sint16_is_div: forall x:int, y:int. y <> 0 -> (is_sint16 (x / y) <-> div_s16 x y = x / y)
+	lemma div_sint32_is_div: forall x:int, y:int. y <> 0 -> (is_sint32 (x / y) <-> div_s32 x y = x / y)
+	lemma div_sint64_is_div: forall x:int, y:int. y <> 0 -> (is_sint64 (x / y) <-> div_s64 x y = x / y)
+	lemma div_uint8_is_div:  forall x:int, y:int. y <> 0 -> (is_uint8  (x / y) <-> div_u8  x y = x / y)
+	lemma div_uint16_is_div: forall x:int, y:int. y <> 0 -> (is_uint16 (x / y) <-> div_u16 x y = x / y)
+	lemma div_uint32_is_div: forall x:int, y:int. y <> 0 -> (is_uint32 (x / y) <-> div_u32 x y = x / y)
+	lemma div_uint64_is_div: forall x:int, y:int. y <> 0 -> (is_uint64 (x / y) <-> div_u64 x y = x / y)
+	meta "remove_unused:dependency" lemma div_sint8_is_div,  function div_s8
+	meta "remove_unused:dependency" lemma div_sint16_is_div, function div_s16
+	meta "remove_unused:dependency" lemma div_sint32_is_div, function div_s32
+	meta "remove_unused:dependency" lemma div_sint64_is_div, function div_s64
+	meta "remove_unused:dependency" lemma div_uint8_is_div,  function div_u8
+	meta "remove_unused:dependency" lemma div_uint16_is_div, function div_u16
+	meta "remove_unused:dependency" lemma div_uint32_is_div, function div_u32
+	meta "remove_unused:dependency" lemma div_uint64_is_div, function div_u64
+
+	lemma div_sint8_is_div_2:  forall x:int, y:int. is_sint8  x /\ y <> 0 /\ y <> -1 -> div_s8  x y = x / y
+	lemma div_sint16_is_div_2: forall x:int, y:int. is_sint16 x /\ y <> 0 /\ y <> -1 -> div_s16 x y = x / y
+	lemma div_sint32_is_div_2: forall x:int, y:int. is_sint32 x /\ y <> 0 /\ y <> -1 -> div_s32 x y = x / y
+	lemma div_sint64_is_div_2: forall x:int, y:int. is_sint64 x /\ y <> 0 /\ y <> -1 -> div_s64 x y = x / y
+	lemma div_uint8_is_div_2:  forall x:int, y:int. is_uint8  x /\ y > 0 -> div_u8  x y = x / y
+	lemma div_uint16_is_div_2: forall x:int, y:int. is_uint16 x /\ y > 0 -> div_u16 x y = x / y
+	lemma div_uint32_is_div_2: forall x:int, y:int. is_uint32 x /\ y > 0 -> div_u32 x y = x / y
+	lemma div_uint64_is_div_2: forall x:int, y:int. is_uint64 x /\ y > 0 -> div_u64 x y = x / y
+	meta "remove_unused:dependency" lemma div_sint8_is_div_2,  function div_s8
+	meta "remove_unused:dependency" lemma div_sint16_is_div_2, function div_s16
+	meta "remove_unused:dependency" lemma div_sint32_is_div_2, function div_s32
+	meta "remove_unused:dependency" lemma div_sint64_is_div_2, function div_s64
+	meta "remove_unused:dependency" lemma div_uint8_is_div_2,  function div_u8
+	meta "remove_unused:dependency" lemma div_uint16_is_div_2, function div_u16
+	meta "remove_unused:dependency" lemma div_uint32_is_div_2, function div_u32
+	meta "remove_unused:dependency" lemma div_uint64_is_div_2, function div_u64
+
+	let function mod_s8  (a b : int) : int requires { [@expl:Not dividing by 0] b <> 0 } = to_sint8  (ComputerDivision.mod a b)
+	let function mod_s16 (a b : int) : int requires { [@expl:Not dividing by 0] b <> 0 } = to_sint16 (ComputerDivision.mod a b)
+	let function mod_s32 (a b : int) : int requires { [@expl:Not dividing by 0] b <> 0 } = to_sint32 (ComputerDivision.mod a b)
+	let function mod_s64 (a b : int) : int requires { [@expl:Not dividing by 0] b <> 0 } = to_sint64 (ComputerDivision.mod a b)
+	let function mod_u8  (a b : int) : int requires { [@expl:Not dividing by 0] b <> 0 } = to_uint8  (ComputerDivision.mod a b)
+	let function mod_u16 (a b : int) : int requires { [@expl:Not dividing by 0] b <> 0 } = to_uint16 (ComputerDivision.mod a b)
+	let function mod_u32 (a b : int) : int requires { [@expl:Not dividing by 0] b <> 0 } = to_uint32 (ComputerDivision.mod a b)
+	let function mod_u64 (a b : int) : int requires { [@expl:Not dividing by 0] b <> 0 } = to_uint64 (ComputerDivision.mod a b)
+
+	lemma mod_sint8_is_mod:  forall x:int, y:int. y <> 0 -> (is_sint8  (ComputerDivision.mod x y) <-> mod_s8  x y = ComputerDivision.mod x y)
+	lemma mod_sint16_is_mod: forall x:int, y:int. y <> 0 -> (is_sint16 (ComputerDivision.mod x y) <-> mod_s16 x y = ComputerDivision.mod x y)
+	lemma mod_sint32_is_mod: forall x:int, y:int. y <> 0 -> (is_sint32 (ComputerDivision.mod x y) <-> mod_s32 x y = ComputerDivision.mod x y)
+	lemma mod_sint64_is_mod: forall x:int, y:int. y <> 0 -> (is_sint64 (ComputerDivision.mod x y) <-> mod_s64 x y = ComputerDivision.mod x y)
+	lemma mod_uint8_is_mod:  forall x:int, y:int. y <> 0 -> (is_uint8  (ComputerDivision.mod x y) <-> mod_u8  x y = ComputerDivision.mod x y)
+	lemma mod_uint16_is_mod: forall x:int, y:int. y <> 0 -> (is_uint16 (ComputerDivision.mod x y) <-> mod_u16 x y = ComputerDivision.mod x y)
+	lemma mod_uint32_is_mod: forall x:int, y:int. y <> 0 -> (is_uint32 (ComputerDivision.mod x y) <-> mod_u32 x y = ComputerDivision.mod x y)
+	lemma mod_uint64_is_mod: forall x:int, y:int. y <> 0 -> (is_uint64 (ComputerDivision.mod x y) <-> mod_u64 x y = ComputerDivision.mod x y)
+	meta "remove_unused:dependency" lemma mod_sint8_is_mod,  function mod_s8
+	meta "remove_unused:dependency" lemma mod_sint16_is_mod, function mod_s16
+	meta "remove_unused:dependency" lemma mod_sint32_is_mod, function mod_s32
+	meta "remove_unused:dependency" lemma mod_sint64_is_mod, function mod_s64
+	meta "remove_unused:dependency" lemma mod_uint8_is_mod,  function mod_u8
+	meta "remove_unused:dependency" lemma mod_uint16_is_mod, function mod_u16
+	meta "remove_unused:dependency" lemma mod_uint32_is_mod, function mod_u32
+	meta "remove_unused:dependency" lemma mod_uint64_is_mod, function mod_u64
+
+	lemma mod_sint8_is_mod_2:  forall x:int, y:int. is_sint8  x /\ y <> 0 -> mod_s8  x y = ComputerDivision.mod x y
+	lemma mod_sint16_is_mod_2: forall x:int, y:int. is_sint16 x /\ y <> 0 -> mod_s16 x y = ComputerDivision.mod x y
+	lemma mod_sint32_is_mod_2: forall x:int, y:int. is_sint32 x /\ y <> 0 -> mod_s32 x y = ComputerDivision.mod x y
+	lemma mod_sint64_is_mod_2: forall x:int, y:int. is_sint64 x /\ y <> 0 -> mod_s64 x y = ComputerDivision.mod x y
+	lemma mod_uint8_is_mod_2:  forall x:int, y:int. is_uint8  x /\ y <> 0 -> mod_u8  x y = ComputerDivision.mod x y
+	lemma mod_uint16_is_mod_2: forall x:int, y:int. is_uint16 x /\ y <> 0 -> mod_u16 x y = ComputerDivision.mod x y
+	lemma mod_uint32_is_mod_2: forall x:int, y:int. is_uint32 x /\ y <> 0 -> mod_u32 x y = ComputerDivision.mod x y
+	lemma mod_uint64_is_mod_2: forall x:int, y:int. is_uint64 x /\ y <> 0 -> mod_u64 x y = ComputerDivision.mod x y
+	meta "remove_unused:dependency" lemma mod_sint8_is_mod_2,  function mod_s8
+	meta "remove_unused:dependency" lemma mod_sint16_is_mod_2, function mod_s16
+	meta "remove_unused:dependency" lemma mod_sint32_is_mod_2, function mod_s32
+	meta "remove_unused:dependency" lemma mod_sint64_is_mod_2, function mod_s64
+	meta "remove_unused:dependency" lemma mod_uint8_is_mod_2,  function mod_u8
+	meta "remove_unused:dependency" lemma mod_uint16_is_mod_2, function mod_u16
+	meta "remove_unused:dependency" lemma mod_uint32_is_mod_2, function mod_u32
+	meta "remove_unused:dependency" lemma mod_uint64_is_mod_2, function mod_u64
+
+	lemma mod_div_relation_sint8:  forall x:int, y:int. is_sint8  x /\ is_sint8  y /\ y <> 0 /\ y <> -1 -> mul_s8  (div_s8  x y) y + mod_s8  x y = x
+	lemma mod_div_relation_sint16: forall x:int, y:int. is_sint16 x /\ is_sint16 y /\ y <> 0 /\ y <> -1 -> mul_s16 (div_s16 x y) y + mod_s16 x y = x
+	lemma mod_div_relation_sint32: forall x:int, y:int. is_sint32 x /\ is_sint32 y /\ y <> 0 /\ y <> -1 -> mul_s32 (div_s32 x y) y + mod_s32 x y = x
+	lemma mod_div_relation_sint64: forall x:int, y:int. is_sint64 x /\ is_sint64 y /\ y <> 0 /\ y <> -1 -> mul_s64 (div_s64 x y) y + mod_s64 x y = x
+	lemma mod_div_relation_uint8:  forall x:int, y:int. is_uint8  x /\ is_uint8  y /\ y <> 0 /\ y <> -1 -> mul_u8  (div_u8  x y) y + mod_u8  x y = x
+	lemma mod_div_relation_uint16: forall x:int, y:int. is_uint16 x /\ is_uint16 y /\ y <> 0 /\ y <> -1 -> mul_u16 (div_u16 x y) y + mod_u16 x y = x
+	lemma mod_div_relation_uint32: forall x:int, y:int. is_uint32 x /\ is_uint32 y /\ y <> 0 /\ y <> -1 -> mul_u32 (div_u32 x y) y + mod_u32 x y = x
+	lemma mod_div_relation_uint64: forall x:int, y:int. is_uint64 x /\ is_uint64 y /\ y <> 0 /\ y <> -1 -> mul_u64 (div_u64 x y) y + mod_u64 x y = x
+	meta "remove_unused:dependency" lemma mod_div_relation_sint8,  function mod_s8
+	meta "remove_unused:dependency" lemma mod_div_relation_sint8,  function div_s8
+	meta "remove_unused:dependency" lemma mod_div_relation_sint16, function mod_s16
+	meta "remove_unused:dependency" lemma mod_div_relation_sint16, function div_s16
+	meta "remove_unused:dependency" lemma mod_div_relation_sint32, function mod_s32
+	meta "remove_unused:dependency" lemma mod_div_relation_sint32, function div_s32
+	meta "remove_unused:dependency" lemma mod_div_relation_sint64, function mod_s64
+	meta "remove_unused:dependency" lemma mod_div_relation_sint64, function div_s64
+	meta "remove_unused:dependency" lemma mod_div_relation_uint8,  function mod_u8
+	meta "remove_unused:dependency" lemma mod_div_relation_uint8,  function div_u8
+	meta "remove_unused:dependency" lemma mod_div_relation_uint16, function mod_u16
+	meta "remove_unused:dependency" lemma mod_div_relation_uint16, function div_u16
+	meta "remove_unused:dependency" lemma mod_div_relation_uint32, function mod_u32
+	meta "remove_unused:dependency" lemma mod_div_relation_uint32, function div_u32
+	meta "remove_unused:dependency" lemma mod_div_relation_uint64, function mod_u64
+	meta "remove_unused:dependency" lemma mod_div_relation_uint64, function div_u64
+
+	let function bool_2_var (a : bool) : int = if a then 1 else 0
+	let function var_2_bool (a : int) : bool = a <> 0
+
+	lemma bool_2_var_truthy: bool_2_var(true) = 1
+	lemma bool_2_var_falsey: bool_2_var(false) = 0
+	lemma var_2_bool_truthy: forall i:int. i <> 0 -> var_2_bool(i)
+	lemma var_2_bool_falsey: not var_2_bool(0)
+	meta "remove_unused:dependency" lemma bool_2_var_truthy, function bool_2_var
+	meta "remove_unused:dependency" lemma bool_2_var_falsey, function bool_2_var
+	meta "remove_unused:dependency" lemma var_2_bool_truthy, function var_2_bool
+	meta "remove_unused:dependency" lemma var_2_bool_falsey, function var_2_bool
+
+	let function arbitrary (x : int) : int
+	ensures { result >= x }
+	=
+		any int ensures { result >= x }
+end
+

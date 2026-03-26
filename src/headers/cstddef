@@ -1,0 +1,84 @@
+// Copyright 2024-2026 Lawrence Livermore National Security, LLC and other Castor Developers.
+// See the top-level LICENSE file for details.
+//
+// SPDX-License-Identifier: BSD-3-Clause
+
+#ifndef _CSTDDEF
+#define _CSTDDEF
+
+namespace std
+{
+	using ptrdiff_t = long long int;
+	using size_t = unsigned long long int;
+	using nullptr_t = decltype(nullptr);
+
+	enum class byte : unsigned char {};
+
+	#pragma castor requires is_integral(IntType)
+	#pragma castor ensures b == old(b) << shift
+	#pragma castor ensures alias_of(result, b)
+	#pragma castor writes b
+	template <class IntType>
+	byte& operator<<=(byte& b, IntType shift);
+	
+	#pragma castor requires is_integral(IntType)
+	#pragma castor ensures result == b << shift
+	#pragma castor no_write
+	template <class IntType>
+	byte operator<<(byte b, IntType shift);
+	
+	#pragma castor requires is_integral(IntType)
+	#pragma castor ensures b == old(b) >> shift
+	#pragma castor ensures alias_of(result, b)
+	#pragma castor writes b
+	template <class IntType>
+	byte& operator>>=(byte& b, IntType shift);
+	
+	#pragma castor requires is_integral(IntType)
+	#pragma castor ensures result == b >> shift
+	#pragma castor no_write
+	template <class IntType>
+	byte operator>>(byte b, IntType shift);
+	
+	#pragma castor ensures l == old(l) | r
+	#pragma castor ensures alias_of(result, l)
+	#pragma castor writes l
+	byte& operator|=(byte& l, byte r);
+	
+	#pragma castor ensures result == l | r
+	#pragma castor no_write
+	byte operator|(byte l, byte r);
+	
+	#pragma castor ensures l == old(l) & r
+	#pragma castor ensures alias_of(result, l)
+	#pragma castor writes l
+	byte& operator&=(byte& l, byte r);
+	
+	#pragma castor ensures result == l & r
+	#pragma castor no_write
+	byte operator&(byte l, byte r);
+	
+	#pragma castor ensures l == old(l) ^ r
+	#pragma castor ensures alias_of(result, l)
+	#pragma castor writes l
+	byte& operator^=(byte& l, byte r);
+	
+	#pragma castor ensures result == l ^ r
+	#pragma castor no_write
+	byte operator^(byte l, byte r);
+	
+	#pragma castor ensures result == ~b
+	#pragma castor no_write
+	byte operator~(byte b);
+	
+	#pragma castor requires is_integral(IntType)
+	#pragma castor ensures min_int(IntType) <= b /\ b <= max_int(IntType) => \
+				result == b
+	#pragma castor no_write
+	template <class IntType>
+	IntType to_integer(byte b);
+}
+
+#define NULL nullptr
+
+#endif

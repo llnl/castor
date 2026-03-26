@@ -1,0 +1,46 @@
+(*
+   Copyright 2024-2026 Lawrence Livermore National Security, LLC and other Castor Developers.
+   See the top-level LICENSE file for details.
+
+   SPDX-License-Identifier: BSD-3-Clause
+*)
+
+theory ArithmeticModel_Witness
+	use int.Int
+
+	let function max_sint8: int = 128
+	let function max_sint16: int = 32768
+	let function max_sint32: int = 2147483648
+	let function max_sint64: int = 9223372036854775808
+
+	predicate is_sint8 (x : int)  = -max_sint8 <= x < max_sint8
+	predicate is_sint16 (x : int) = -max_sint16 <= x < max_sint16
+	predicate is_sint32 (x : int) = -max_sint32 <= x < max_sint32
+	predicate is_sint64 (x : int) = -max_sint64 <= x < max_sint64
+
+	let rec function to_sint8  (x:int)
+	variant { if x < -max_sint8 then -x else x }
+	ensures { is_sint8 result }
+	= if x < -max_sint8 then to_sint8 (x + max_sint8) else if x >= max_sint8 then to_sint8 (x - max_sint8) else x
+
+	let rec function to_sint16 (x:int)
+	variant { if x < -max_sint16 then -x else x }
+	ensures { is_sint16 result }
+	= if x < -max_sint16 then to_sint16 (x + max_sint16) else if x >= max_sint16 then to_sint16 (x - max_sint16) else x
+
+	let rec function to_sint32 (x:int)
+	variant { if x < -max_sint32 then -x else x }
+	ensures { is_sint32 result }
+	= if x < -max_sint32 then to_sint32 (x + max_sint32) else if x >= max_sint32 then to_sint32 (x - max_sint32) else x
+
+	let rec function to_sint64 (x:int)
+	variant { if x < -max_sint64 then -x else x }
+	ensures { is_sint64 result }
+	= if x < -max_sint64 then to_sint64 (x + max_sint64) else if x >= max_sint64 then to_sint64 (x - max_sint64) else x
+
+	clone ArithmeticModel.ArithmeticModel with
+		val to_sint8 = to_sint8,
+		val to_sint16 = to_sint16,
+		val to_sint32 = to_sint32,
+		val to_sint64 = to_sint64
+end

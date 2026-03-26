@@ -1,0 +1,129 @@
+* PEG expressions
+* result/parse tree 
+
+type identifier = [A-Za-z][A-Za-z_0-9]*
+
+data peg_expression = 
+        (* choice peg_expression peg_expression *)
+    |   primitive string
+    |   non-terminal identifier
+    |   sequence peg_expression peg_expression
+    |   not peg_expression
+    |   empty
+    |   repeat peg_expression
+
+(* 
+
+    desugar : peg_expression_extended -> peg_expression
+
+    desugar fail as (not empty)
+    desugar any  as ...
+    desugar ?e   as (desugar e) / empty
+    desugar e+   as e e*
+    desugar &e   as !!e
+*)
+
+data grammar = 
+    (identifier * list (identifier * list peg_expression))
+
+(* 
+
+Grammar is a hashmap from non-terminal to list of rules
+A rule is a tuple 
+Start-symbol
+
+Grammar = {
+    "start": "",
+    "rules": {
+        "expr" : ["expr + 1", "1" , "2"],
+    }
+}
+
+*)
+
+expr : 1 + expr / 1 / 2
+
+grammar = ("expr", [
+        ("expr", ([ 
+            (sequence (primitive "1 +") (non-terminal "expr")) ;
+            (primitive "1") ; 
+            (primitive "2") 
+            ])
+        );
+    ]
+)
+
+
+(*
+   
+parse grammar "1 + 1 + 2" => 
+
+
+    non-terminal E/0 [
+        terminal "1 +";
+        non-terminal E/0 [
+            terminal "1 +";
+            non-terminal E/2 [terminal "2"]
+        ]
+    ]
+
+parse grammar "2" => 
+
+    (terminal "2")
+
+*)
+
+
+data parse_tree =
+        non-term identifier * int * list parse_tree
+    |   terminal string
+
+span : parse_tree -> int
+
+data parse_result = 
+    | success parse_tree
+    | fail
+
+parse_expression : peg_expression -> string -> parse_tree
+
+parse : peg -> string -> parse_tree
+
+
+VC <- LoopVariant / LoopInvariant / Writes / Requires / Ensures / Valid / Separated
+// Expression <- PredicateCall / Quantifier / Infix_Expression(Atom, Infix_Operator)
+Expression <- PredicateCall / Quantifier / TEST
+TEST <- Atom (Infix_Operator Atom)*
+Atom       <- '(' Expression ')' / Literal / WriteableExpression / Prefix_Operator Atom
+PredicateCall  <- VariableReference '(' ExpressionList ')'
+ExpressionList <- Expression (',' Expression)*
+Quantifier <- Quant VarList '.' Expression
+Quant      <- 'forall' / 'exists'
+VarList    <- VariableReference (',' VariableReference)*
+Literal <- Number
+WriteableExpression <- VariableReference / PointerDereference
+VariableReference   <- Identifier
+PointerDereference  <- '*' WriteableExpression
+WriteableExpressionList <- WriteableExpression (',' WriteableExpression)*
+LoopVariant   <- 'variant' Expression
+LoopInvariant <- 'invariant' Expression
+Writes        <- 'writes' WriteableExpressionList
+Requires      <- 'requires' Expression
+Ensures       <- 'ensures' Expression
+Valid         <- 'valid' WriteableExpressionList
+Separated     <- 'separated' WriteableExpressionList
+Identifier <- < !Keyword Name >
+Keyword    <- ('exists' | 'forall' | 'variant' | 'invariant' | 'writes' | 'requires' | 'ensures' | 'valid' | 'separated') !Name
+Name   <- < [A-Za-z_][A-Za-z0-9_]* >
+Number <- < [0-9]+ >
+Prefix_Operator <- < [!-] >
+Infix_Operator  <- < '->' / '<->' / '>=' / '<=' / '\\/' / '/\\' / '==' / '!=' / [-+/><*] >
+%whitespace <- [ \t]*
+%word       <- [A-Za-z]+
+Infix_Expression(A, O) <- A (O A)* {
+  precedence
+    L -> <->
+    L /\\ \\/
+    L >= <= > < == !=
+    L + -
+    L * /
+}

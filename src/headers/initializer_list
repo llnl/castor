@@ -1,0 +1,48 @@
+// Copyright 2024-2026 Lawrence Livermore National Security, LLC and other Castor Developers.
+// See the top-level LICENSE file for details.
+//
+// SPDX-License-Identifier: BSD-3-Clause
+
+#ifndef _INITIALIZER_LIST
+#define _INITIALIZER_LIST
+
+#include <cstddef>
+
+namespace std
+{
+
+	template <class T>
+	class initializer_list
+	{
+	public:
+		using value_type = T;
+		using reference = const T&;
+		using const_reference = const T&;
+		using size_type = std::size_t;
+		using iterator = const T*;
+		using const_iterator = const T*;
+
+		initializer_list() noexcept = default;
+
+		size_type size() const noexcept { return size_type(); }
+
+		const T* begin() const noexcept { return nullptr; }
+
+		const T* end() const noexcept { return nullptr; }
+	};
+
+	template <class E>
+	const E* begin(initializer_list<E> il) noexcept
+	{
+		return il.begin();
+	}
+
+	template <class E>
+	const E* end(initializer_list<E> il) noexcept
+	{
+		return il.end();
+	}
+
+}
+
+#endif

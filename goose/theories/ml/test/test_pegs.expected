@@ -1,0 +1,31 @@
+output for t1: true
+output for t2: true
+parsing (Star (Term a)) on "aa" with prefix ""
+prefixes: {aa,a,}
+tbl: {}
+parsing (Term a) on "aa" with prefix ""
+prefixes: {aa,a,}
+tbl: {}
+Success! taking one
+continuing star loop 
+parsing (Star (Term a)) on "a" with prefix "a"
+prefixes: {a,}
+tbl: {((Term a), a) |-> 1}
+parsing (Term a) on "a" with prefix "a"
+prefixes: {a,}
+tbl: {((Term a), a) |-> 1}
+using the memo table!! skipping 1 of  
+continuing star loop 
+parsing (Star (Term a)) on "" with prefix "aa"
+prefixes: {}
+tbl: {((Term a), a) |-> 1}
+parsing (Term a) on "" with prefix "aa"
+prefixes: {}
+tbl: {((Term a), a) |-> 1}
+done with star loop, prefix is "aa", len is 2
+output for t1 (memo): true
+parsing (Star (Term a)) on "aaa" with prefix ""
+prefixes: {aaa,aa,a,}
+tbl: {((Star (Term a)), aa) |-> 2,((Term a), a) |-> 1}
+using the memo table!! skipping 2 of a 
+output for t2 (memo): false

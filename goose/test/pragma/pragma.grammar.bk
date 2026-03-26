@@ -1,0 +1,87 @@
+VC     <- LoopInvariant / LoopVariant / Writes / Requires / Ensures / Assert / Assume / Frees
+
+Expression <- Infix_Expression(Atom, Infix_Operator)
+Atom       <- Call
+    / WriteableExpression
+    / Prefix_Operator Atom
+    / '(' Expression ')'
+    / Literal
+    / Quantifier
+    / Result
+    / AddressOf
+    / Label
+
+Call  <- &. Identifier '(' ExpressionList ')'
+ExpressionList <- Expression (',' Expression)*
+
+#Index      <- &. Identifier '[' IndexRange ']'
+Index      <- &. WriteableExpression '[' IndexRange ']'
+IndexRange <- Expression ('..' Expression)?
+
+Quantifier <- &. Quant VarList '.' Expression
+Quant      <- 'forall' / 'exists'
+VarList    <- VarDecl (',' VarDecl)*
+VarDecl    <- Identifier Identifier
+
+Literal <- Boolean / Number / Builtin
+Boolean <- 'true' / 'false'
+
+Result <- 'result'
+
+AddressOf <- '&' WriteableExpression
+
+Label <- '@' Identifier
+
+WriteableExpression <- Index / Identifier / PointerDereference / FieldReference / FieldArrowReference
+PointerDereference  <- '*' WriteableExpression
+#FieldReference      <- '[' WriteableExpression ']' '.' Identifier
+FieldReference      <- WriteableExpression '.' Identifier
+#FieldArrowReference      <- '[' WriteableExpression ']' '->' Identifier
+FieldArrowReference      <- WriteableExpression '->' Identifier
+
+
+WriteableExpressionList <- WriteableExpression (',' WriteableExpression)*
+
+LoopVariant   <- 'variant' Expression
+LoopInvariant <- 'invariant' Expression
+Writes        <- 'writes' WriteableExpressionList / 'no_write'
+Frees         <- 'frees' WriteableExpressionList / 'no_free'
+Requires      <- 'requires' Expression
+Ensures       <- 'ensures' Expression
+Assert        <- 'assert' Expression
+Assume        <- 'assume' Expression
+
+Identifier <- !Keyword !Builtin Name
+Keyword    <- Keyword_Reserved !Name
+Keyword_Reserved <-
+    'true' / 'false' / 'result' / 'exists'
+    / 'forall' / 'variant' / 'invariant'
+    / 'writes' / 'requires' / 'ensures'
+Builtin    <- 'min_sint8' / 'max_sint8' / 'min_uint8' / 'max_uint8'
+    / 'min_sint16' / 'max_sint16' / 'min_uint16' / 'max_uint16'
+    / 'min_sint32' / 'max_sint32' / 'min_uint32' / 'max_uint32'
+    / 'min_sint64' / 'max_sint64' / 'min_uint64' / 'max_uint64'
+
+Name   <- [A-Za-z_][A-Za-z0-9_]*
+Number <- [0-9]+
+
+Prefix_Operator <- [!-]
+Infix_Operator  <-
+    '->' / '<->'
+    / '>=' / '<='
+    / '>>' / '<<' / '\\/'
+    / '/\\' / '=='
+    / '!=' / '-' / '+' / '/' / '>' / '<'
+    / '*' / '^'
+    / '|' / '&'
+
+Infix_Expression(A, O) <- A (O A)* {
+  precedence
+    R -> <->
+    L /\ \/
+    L >= <= > < == !=
+    L << >>
+    L ^ | &
+    L + -
+    L * /
+}

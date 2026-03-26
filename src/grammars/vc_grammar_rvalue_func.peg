@@ -1,0 +1,108 @@
+CastorVC <- 'castor ' VC @LiftHandler1
+
+VC <- LoopInvariant @LiftHandler
+    / LoopVariant   @LiftHandler
+    / Writes        @LiftHandler
+    / Requires      @LiftHandler
+    / Ensures       @LiftHandler
+    / Assert        @LiftHandler
+    / Assume        @LiftHandler
+    / Frees         @LiftHandler
+    / Lemma         @LiftHandler
+    / Axiom         @LiftHandler
+    / Ghost         @LiftHandler
+
+LoopVariant   <- 'variant ' Expression   @VariantHandler
+LoopInvariant <- 'invariant ' Expression @InvariantHandler
+Writes        <- 'writes ' WriteableExpressionList @WritesHandler / 'no_write' @WritesHandler
+Requires      <- 'requires ' Expression  @RequiresHandler
+Ensures       <- 'ensures ' Expression   @EnsuresHandler
+Assert        <- 'assert ' Expression    @AssertHandler
+Assume        <- 'assume ' Expression    @AssumeHandler
+Frees         <- 'frees ' WriteableExpressionList @FreesHandler / 'no_free' @FreesHandler
+Lemma         <- 'lemma ' Name ':' Expression @LemmaHandler
+Axiom         <- 'axiom ' Name ':' Expression @AxiomHandler
+Ghost         <- 'ghost' @GhostHandler
+
+WriteableExpressionList <- WriteableExpression (',' WriteableExpression)* @ExpressionListHandler
+
+OP1 <- '=>'      @OperatorHandler / '<->' @OperatorHandler
+OP2 <- '/\\'     @OperatorHandler / '\\/' @OperatorHandler
+OP3 <- '>='      @OperatorHandler / '<='  @OperatorHandler / '>'  @OperatorHandler
+     / '<' !'->' @OperatorHandler / '=='  @OperatorHandler / '!=' @OperatorHandler
+OP4 <- '>>'      @OperatorHandler / '<<'  @OperatorHandler
+OP5 <- '^'       @OperatorHandler / '|'   @OperatorHandler / '&'  @OperatorHandler
+OP6 <- '+'       @OperatorHandler / '-'   @OperatorHandler
+OP7 <- '/' !'\\' @OperatorHandler / '*'   @OperatorHandler / '%'  @OperatorHandler
+
+Expression <- E2 (OP1 E2)* @ExpressionHandlerRight
+E2 <- E3 (OP2 E3)*         @ExpressionHandler
+E3 <- E4 (OP3 E4)*         @ExpressionHandler
+E4 <- E5 (OP4 E5)*         @ExpressionHandler
+E5 <- E6 (OP5 E6)*         @ExpressionHandler
+E6 <- E7 (OP6 E7)*         @ExpressionHandler
+E7 <- Atom (OP7 Atom)*     @ExpressionHandler
+
+Atom <- '(' Expression ')'   @LiftHandler1
+      / Prefix_Operator Atom @PrefixHandler
+      / Call                 @LiftHandler
+      / WriteableExpression  @LiftHandler
+      / Literal              @LiftHandler
+      / AddressOf            @LiftHandler
+      / Label                @LiftHandler
+      / Quantifier           @LiftHandler
+      / Result               @LiftHandler
+
+Call  <- Identifier '(' ExpressionList ')' @CallHandler
+ExpressionList <- Expression (',' Expression)* @ExpressionListHandler
+
+Quantifier <- Quant VarList '.' Expression      @QuantifierHandler
+Quant      <- 'forall' @QuantHandler / 'exists' @QuantHandler
+VarList    <- VarDecl (',' VarDecl)*            @VarListHandler
+VarDecl    <- Identifier ':' Identifier         @VarDeclHandler
+
+Literal <- Boolean @LiftHandler / Number @LiftHandler / Builtin @LiftHandler
+Boolean <- 'true' @BooleanHandler / 'false' @BooleanHandler
+Number <- [0-9]+ @NumberHandler
+
+Result <- 'result' @RResultHandler
+
+AddressOf <- '&' WriteableExpression @AddressOfHandler
+
+Label <- '@' Identifier @LabelHandler
+
+WriteableExpression <- PointerDereference @LiftHandler
+                     / PostfixExpression  @LiftHandler
+                     / Identifier         @LiftHandler
+
+PostfixBase <- '(' Expression ')' @LiftHandler1
+             / Result             @LiftHandler
+             / Identifier         @LiftHandler
+
+PointerDereference <- '*' Atom                     @PointerDereferenceHandler
+PostfixExpression  <- PostfixBase PostfixTail+     @PostfixHandler
+PostfixTail        <- '.'  Identifier
+                    / '->' Identifier
+		    / '[' IndexRange ']'
+
+IndexRange <- Expression ('..' Expression)?        @IndexRangeHandler
+
+Identifier <- !Keyword Name @IdentifierHandler
+
+Keyword    <-
+    'true' / 'false' / 'result' / 'exists'
+    / 'forall' / 'variant' / 'invariant'
+    / 'writes' / 'requires' / 'ensures' / Builtin
+Builtin    <- 'min_sint8' @MinS8Handler / 'max_sint8' @MaxS8Handler
+    / 'min_uint8'  @MinU8Handler / 'max_uint8' @MaxU8Handler
+    / 'min_sint16' @MinS16Handler / 'max_sint16' @MaxS16Handler
+    / 'min_uint16' @MinU16Handler / 'max_uint16' @MaxU16Handler
+    / 'min_sint32' @MinS32Handler / 'max_sint32' @MaxS32Handler
+    / 'min_uint32' @MinU32Handler / 'max_uint32' @MaxU32Handler
+    / 'min_sint64' @MinS64Handler / 'max_sint64' @MaxS64Handler
+    / 'min_uint64' @MinU64Handler / 'max_uint64' @MaxU64Handler
+
+Name   <- [A-Za-z_][A-Za-z0-9_]* @NameHandler
+
+Prefix_Operator <- [!~-] @PrefixCharHandler
+

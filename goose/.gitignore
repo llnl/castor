@@ -1,0 +1,14 @@
+*.o
+.tup/
+.vscode/
+# peg
+src/PEG/peg
+*.dSYM
+/build
+cmake-build-*
+.DS_Store
+.idea
+_build
+out
+doc/doxygen/html
+doc/doxygen/latex

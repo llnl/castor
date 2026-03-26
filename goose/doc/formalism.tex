@@ -1,0 +1,133 @@
+\documentclass{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{soul}
+
+\usepackage{multirow}
+\usepackage{semantic}
+\usepackage{array}
+
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks,
+    linkcolor={red!50!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}
+}
+\usepackage[capitalize, noabbrev, nameinlink]{cleveref}
+
+
+
+
+\usepackage{macros}
+
+\begin{document}
+
+
+\newif\ifdraft
+% For final version, replace next line by \draftfalse
+%\drafttrue % for draft version
+\drafttrue
+\newcommand{\comment}[1]{\ifdraft{\textrm{\color{blue}[#1]}}\fi}
+\newcommand{\john}[1]{\ifdraft{\textrm{\color{red}[#1 --John]}}\fi}
+
+\title{GoosePEG
+% \thanks{Identify applicable funding agency here. If none, delete this.}
+}
+
+\maketitle
+
+\section{Syntax}
+
+The syntax for GoosePEG expressions Expr is given in \cref{fig:syntax}.
+We model nonterminals as a set of variables NonTerm, 
+where the nonterminals for a particular grammar consist of a total function $F$ from nonterminal variables to expressions (i.e. 
+$F : \text{NonTerm} \to \text{Expr}$).
+
+\begin{figure}[h]
+\centering
+
+    \begin{tabular}{l c >{$}l<{$}}
+        \multicolumn{3}{c}{c $\in$ Term, \quad v $\in$ NonTerm} \\
+        $e, e_1, e_2 \in$ Expr & \bnfdef & \texttt{term} ~ c \\
+                     & \bnfalt & \texttt{nterm} ~ v \\
+                     & \bnfalt & e_1 \cdot e_2 \\
+                     & \bnfalt & e_1 / e_2 \\
+                     & \bnfalt & e^{*} \\
+                     & \bnfalt & !e \\
+    \end{tabular}
+    %
+    \caption{Core syntax for PEG grammars.}
+    \label{fig:syntax}
+\end{figure}
+
+\section{Semantics}
+
+The semantics of parsing expressions is given in \cref{fig:nat-semantics}.
+Following Ford, we write $\parseto{e}{s}{r}$ to mean an expression $e$ parses a string $s$ to a result $r$, which can either be a string remainder $s'$ or a parse failure $\bot$.
+For strings, we write $\epsilon$ for the empty string and list syntax otherwise (i.e., $c : t$ denotes a character $c$ and a tail $t$, and $s_1 \listcat s_2$ denotes the list concatenations of two strings $s_1$ and $s_2$).
+
+Two rules. 
+
+\begin{enumerate}
+\item Normal rule just looks up from the memo table with precedence $n$: $\Gamma |- (e^{n}, s) \Rightarrow s'$
+\item Updating rule changes the memo table:  $\Gamma |- (e^{n}, s) \to (s', \Gamma')$
+
+\end{enumerate}
+
+\begin{figure}
+    \centering
+    \[
+    \begin{array}{c c c}
+        \inference{}{\parseto{\texttt{term} ~ c}{c : s}{s}}{\textbf{t.n1}} & 
+        \inference{c \neq c'}{\parseto{\texttt{term} ~ c}{c' : s}{\bot}}{\textbf{t.n2}} &
+        \inference{}{\parseto{\texttt{term} ~ c}{[]}{\bot}}{\textbf{t.n3}} 
+        \\ \\
+        \inference{\parseto{F ~ v}{s}{r}}{\parseto{\texttt{nonterm} ~ v}{s}{r}}{\textbf{nt.n1}} &
+        \inference{}{\parseto{\texttt{nonterm} ~ v}{s}{\bot}}{\textbf{nt.n2}} &
+        \inference{
+            \parseto{e}{s}{\bot} 
+        }{\parseto{!e}{s}{s}}{\textbf{neg.n1}} 
+        \\ \\
+        \inference{
+            \parseto{e}{s}{s'} 
+        }{\parseto{!e}{s}{\bot}}{\textbf{neg.n2}} &
+        \inference{
+            \parseto{e_1}{s_1 \listcat s_2}{s_2} \\
+            \parseto{e_2}{s_2}{r}
+        }{\parseto{e_1 \cdot e_2}{s_1 \listcat s_2}{r}}{\textbf{cat.n1}} &
+        \inference{
+            \parseto{e_1}{s}{\bot} 
+        }{\parseto{e_1 \cdot e_2}{s}{\bot}}{\textbf{cat.n2}} 
+        \\ \\
+        \inference{
+            \parseto{e_1}{s}{s'} 
+        }{\parseto{e_1 / e_2}{s}{s'}}{\textbf{alt.n1}} &
+        \inference{
+            \parseto{e_1}{s}{\bot} \\
+            \parseto{e_2}{s}{r} 
+        }{\parseto{e_1 / e_2}{s}{r}}{\textbf{alt.n2}} &
+        \inference{
+            \parseto{e}{s}{\bot} 
+        }{\parseto{e^{*}}{s}{s}}{\textbf{rep.n1}} 
+        \\ \\
+        \inference{
+            \parseto{e}{s}{s'} \\
+            \parseto{e^{*}}{s'}{s''}
+        }{\parseto{e^{*}}{s}{s''}}{\textbf{rep.n2}}
+        & & \\ \\
+    \end{array}
+    \]
+    %
+    \caption{Core Natural semantics.}
+    \label{fig:nat-semantics}
+\end{figure}
+
+
+\end{document}
+
