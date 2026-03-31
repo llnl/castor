@@ -131,6 +131,10 @@ doxygen Doxyfile
 # folder now exists at ./doxygen
 ```
 
+## Contact
+
+For questions or comments that do not fit under a GitHub issue, the authors may be contacted at `castor@llnl.gov`.
+
 ## Release
 
 This code is released under the BSD 3-Clause License.
