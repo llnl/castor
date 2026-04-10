@@ -41,14 +41,23 @@ You can find how to install opam [here](https://opam.ocaml.org/doc/Install.html)
 After `opam` is visible:
 
 ```sh
+# Create switch and initialize
 opam init
 opam switch create castor-switch 4.14.1
 eval $(opam env --switch=castor-switch) # We recommend adding this to your ~/.bashrc
+
+# Install Why3
 opam install why3
+
+# Install Why3find from Git repository
 git clone https://git.frama-c.com/pub/why3find.git
 cd why3find
+git checkout tags/1.2.0
 opam install .
 ```
+
+Why3find 1.3.0 breaks Castor's mechanism for reporting failed VCs back to the user.
+Version 1.2.0 is tested and working, and is the version we recommend using.
 
 Please make sure all of these are installed and visible in your `$PATH` before proceeding.
 
