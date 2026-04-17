@@ -69,6 +69,11 @@ else()
 	message(WARNING "Dynamic memory allocation in Castor is unsound! You may prove something false!")
 endif()
 
+file(READ "VERSION" TOOL_VERSION_STRING)
+string(STRIP "${TOOL_VERSION_STRING}" TOOL_VERSION_STRING)
+
+message(STATUS "Castor version is: ${TOOL_VERSION_STRING}")
+
 add_executable(${PROJECT_NAME}
 	src/Castor/main.cxx
 	src/Castor/irgenerator.cxx
@@ -103,7 +108,8 @@ target_compile_options(${PROJECT_NAME} PRIVATE
 	${DYNAMIC}
 	-DWHY3="${WHY3}"
 	-DWHY3FIND="${WHY3FIND}"
-	-DREPLACEMENT_INCLUDES="${REPLACEMENT_INCLUDES}")
+	-DREPLACEMENT_INCLUDES="${REPLACEMENT_INCLUDES}"
+	-DTOOL_VERSION_STRING="${TOOL_VERSION_STRING}")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
 	-pthread -fopenmp -lstdc++fs

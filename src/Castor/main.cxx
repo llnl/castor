@@ -59,7 +59,10 @@ static const char *description =
 	"solvers to formally verify the source code.\n"
 	;
 
-#define TOOL_VERSION_STRING "0.4.0"
+#ifndef TOOL_VERSION_STRING
+	#warning "Did not specify Castor version, defaulting to \"0.0.0-dev\""
+	#define TOOL_VERSION_STRING "0.0.0-dev"
+#endif
 
 ///
 /// @brief Enum which specifies all of the possible subcommands that Castor can be invoked with
