@@ -1,8 +1,6 @@
 # ROSE Castor
 
-Castor is a tool that bridges the ROSE compiler framework with the Why3 verification framework.
-Currently, the only supported frontend is C++, but we are looking at more frontends in the future.
-Castor in its current state is an in-development tool enabling formal verification of idiomatic C++.
+Castor is a tool enabling semi-automated verification of C++ using the power of ROSE and the Why3 framework.
 C++ can be written with verification conditions embedded in `#pragma` statements, and Castor will convert the program into a WhyML program which can be verified by the Why3 framework, including automated verification with SMT solvers.
 There is currently limited but growing support for C++ features, and a custom verification language for writing verification conditions.
 
@@ -64,8 +62,6 @@ Please make sure all of these are installed and visible in your `$PATH` before p
 After cloning and navigating to the root of the repository:
 
 ```sh
-git submodule init
-git submodule update
 mkdir build 
 cd build
 cmake ..
@@ -99,13 +95,11 @@ make test
 
 The `-DCTEST_TIMEOUT` flag for CMake sets the timeout for the Castor when running tests.
 **Some tests might run for much longer than the timeout given.** 
-Using a 120 second timeout, the longest test took several minutes on our test machine.
-See the section on "Using Castor" for why this is.
+Using a 60 second timeout, the longest test took several minutes on our test machine.
 
-The tests are expected to take a long time to complete.
-On our test machine, the tests take **several hours** to pass.
-A timeout of 120 was sufficient to get all tests to pass on our test machine, but you may find that a longer timeout is necessary,
-depending on the SMT solvers installed, their versions, and your hardware configuration.
+A timeout of 60 was sufficient to get all tests to pass on our test machine,
+but you may find that a longer timeout is necessary, depending on the SMT solvers installed,
+their versions, and your hardware configuration.
 
 ## Using Castor
 
