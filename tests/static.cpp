@@ -11,7 +11,6 @@ struct StaticMembersT
 	#pragma castor ensures is_integral(T)
 	#pragma castor ensures x == checked(old(x) - 1)
 	#pragma castor writes x
-	#pragma castor no_free
 	static void dec(T& x)
 	{
 		x -= 1;
@@ -25,7 +24,6 @@ struct StaticMembers
 
 	#pragma castor ensures x == checked(old(x) + 1)
 	#pragma castor writes x
-	#pragma castor no_free
 	static void inc(int& x)
 	{
 		x += 1;

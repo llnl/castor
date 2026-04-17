@@ -14,19 +14,16 @@ protected:
 public:
 	#pragma castor invariant valid(this)
 	#pragma castor no_write
-	#pragma castor no_free
 	Animal() = default;
 
 	#pragma castor invariant valid(this)
 	#pragma castor ensures this->length == length
 	#pragma castor writes this->length
-	#pragma castor no_free
 	Animal(int length) : length(length) { }
 
 	#pragma castor invariant valid(this)
 	#pragma castor ensures result == this->length
 	#pragma castor no_write
-	#pragma castor no_free
 	int get_length()
 	{
 		return this->length;
@@ -35,7 +32,6 @@ public:
 	#pragma castor invariant valid(this)
 	#pragma castor ensures global == 1
 	#pragma castor writes global
-	#pragma castor no_free
 	void do_something()
 	{
 		global = 1;
@@ -55,7 +51,6 @@ public:
 	#pragma castor ensures this->shadows == &this->legs
 	#pragma castor ensures is_pointer(this->shadows)
 	#pragma castor writes this->legs, this->length, this->shadows
-	#pragma castor no_free
 	Mammal(int legs, int length)
 	{
 		this->length = length;
@@ -69,7 +64,6 @@ public:
 	#pragma castor ensures this->shadows == 0
 	#pragma castor ensures is_pointer(this->shadows)
 	#pragma castor writes this->legs, this->length, this->shadows
-	#pragma castor no_free
 	Mammal(int length) : Animal(length)
 	{
 		this->shadows = nullptr;
@@ -77,7 +71,6 @@ public:
 	}
 
 	#pragma castor invariant valid(this)
-	#pragma castor no_free
 	#pragma castor no_write
 	#pragma castor ensures result == this->legs
 	int get_legs()
@@ -88,7 +81,6 @@ public:
 	#pragma castor invariant valid(this)
 	#pragma castor ensures global == 2
 	#pragma castor writes global
-	#pragma castor no_free
 	void do_something()
 	{
 		global = 2;
@@ -103,7 +95,6 @@ struct Cat : public Mammal
 	#pragma castor ensures this->length == length
 	#pragma castor ensures this->legs == legs
 	#pragma castor ensures this->cute == cute
-	#pragma castor no_free
 	#pragma castor writes this->length, this->legs, this->cute, this->shadows
 	Cat(int legs, int length, bool cute) : Mammal(legs, length)
 	{

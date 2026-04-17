@@ -15,7 +15,6 @@ public:
 	#pragma castor ensures this->first == first
 	#pragma castor ensures this->second == second
 	#pragma castor writes this->first, this->second
-	#pragma castor no_free
 	Tuple(T first, U second)
 	{
 		this->first = first;
@@ -25,7 +24,6 @@ public:
 	#pragma castor invariant valid(this)
 	#pragma castor ensures result == this->first
 	#pragma castor no_write
-	#pragma castor no_free
 	T get_first()
 	{
 		return this->first;
@@ -34,7 +32,6 @@ public:
 	#pragma castor invariant valid(this)
 	#pragma castor ensures result == this->second
 	#pragma castor no_write
-	#pragma castor no_free
 	U get_second()
 	{
 		return this->second;
@@ -44,7 +41,6 @@ public:
 	#pragma castor requires min_int(T) <= this->first /\ this->first < max_int(T) - 1
 	#pragma castor ensures this->first == old(this->first) + 1
 	#pragma castor writes this->first
-	#pragma castor no_free
 	void add_one_first()
 	{
 		this->first += 1;
@@ -54,7 +50,6 @@ public:
 	#pragma castor requires min_int(U) <= this->second /\ this->second < max_int(U) - 1
 	#pragma castor ensures this->second == old(this->second) + 1
 	#pragma castor writes this->second
-	#pragma castor no_free
 	void add_one_second()
 	{
 		this->second += 1;

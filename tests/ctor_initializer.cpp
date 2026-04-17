@@ -9,13 +9,11 @@ struct Foo
 
 	#pragma castor invariant valid(this)
 	#pragma castor writes this->a
-	#pragma castor no_free
 	#pragma castor ensures this->a == x
 	Foo(int x) : a(x) { }
 
 	#pragma castor invariant valid(this)
 	#pragma castor no_write
-	#pragma castor no_free
 	~Foo() { }
 };
 
@@ -25,13 +23,11 @@ struct Bar
 
 	#pragma castor invariant valid(this)
 	#pragma castor writes this->foo
-	#pragma castor no_free
 	#pragma castor ensures this->foo.a == x
 	Bar(int x) : foo(x) { }
 
 	#pragma castor invariant valid(this)
 	#pragma castor no_write
-	#pragma castor no_free
 	~Bar() = default;
 };
 

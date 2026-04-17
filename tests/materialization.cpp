@@ -10,7 +10,6 @@ private:
 
 public:
 	#pragma castor invariant valid(this)
-	#pragma castor no_free
 	#pragma castor writes this->x
 	#pragma castor ensures this->x == a
 	Foo(int a)
@@ -19,7 +18,6 @@ public:
 	}
 
 	#pragma castor invariant valid(this)
-	#pragma castor no_free
 	#pragma castor no_write
 	#pragma castor ensures result == this->x
 	int get_x()

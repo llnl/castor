@@ -9,20 +9,17 @@ struct Foo
 	int b;
 
 	#pragma castor invariant valid(this)
-	#pragma castor no_free
 	#pragma castor writes this->a, this->b
 	#pragma castor ensures this->a == 0 /\ this->b == 0
 	Foo() : a(0), b(0) { }
 
 	#pragma castor invariant valid(this)
-	#pragma castor no_free
 	#pragma castor writes this->a, this->b
 	#pragma castor ensures this->a == a /\ this->b == b
 	Foo(int a, int b);
 
 	#pragma castor invariant valid(this)
 	#pragma castor no_write
-	#pragma castor no_free
 	#pragma castor ensures result <-> (f == *this)
 	bool operator==(Foo& f);
 };
@@ -45,7 +42,6 @@ void foo()
 }
 
 #pragma castor no_write
-#pragma castor no_free
 #pragma castor ensures result.a == 5 /\ result.b == 10
 Foo bar();
 
@@ -61,7 +57,6 @@ struct Bar
 	Foo a;
 
 	#pragma castor invariant valid(this)
-	#pragma castor no_free
 	#pragma castor writes this->a
 	#pragma castor ensures this->a == x
 	Bar(Foo x);

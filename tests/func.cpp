@@ -6,7 +6,6 @@
 #pragma castor requires is_sint16(a) /\ is_sint16(b)
 #pragma castor ensures result == a + b
 #pragma castor no_write
-#pragma castor no_free
 int add(int a, int b)
 {
 	return a + b;
@@ -15,7 +14,6 @@ int add(int a, int b)
 #pragma castor requires is_sint16(a) /\ is_sint16(b)
 #pragma castor ensures result == a + b
 #pragma castor no_write
-#pragma castor no_free
 int add2(int a, int b)
 {
 	return add(a, b);
@@ -24,7 +22,6 @@ int add2(int a, int b)
 #pragma castor requires is_sint8(a) /\ is_sint8(b) /\ is_sint16(c)
 #pragma castor ensures result == a + b + c
 #pragma castor no_write
-#pragma castor no_free
 int add3(int a, int b, int c)
 {
 	return add(add(a, b), c);
@@ -44,7 +41,6 @@ void call_voidfunc()
 #pragma castor requires x == 5
 #pragma castor ensures result == 5
 #pragma castor no_write
-#pragma castor no_free
 int requires_five(int x)
 {
 	return x;

@@ -23,7 +23,6 @@ T inc(T x)
 
 #pragma castor invariant valid(a, b) /\ separated(a, b)
 #pragma castor writes *a, *b
-#pragma castor no_free
 #pragma castor ensures old(*a) == *b /\ old(*b) == *a
 template<class T>
 void swap(T *a, T *b)

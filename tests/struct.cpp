@@ -10,7 +10,6 @@ struct Point
 
 	#pragma castor invariant valid(this)
 	#pragma castor no_write
-	#pragma castor no_free
 	Point() { }
 };
 
@@ -21,14 +20,12 @@ struct PointPair
 
 	#pragma castor invariant valid(this)
 	#pragma castor no_write
-	#pragma castor no_free
 	PointPair() { }
 };
 
 #pragma castor requires is_sint32(p1.x + p2.x)
 #pragma castor ensures result == (p1.x + p2.x) / 2
 #pragma castor no_write
-#pragma castor no_free
 int midpoint_x(struct Point p1, struct Point p2)
 {
 	return (p1.x + p2.x) / 2;
@@ -37,7 +34,6 @@ int midpoint_x(struct Point p1, struct Point p2)
 #pragma castor requires is_sint32(p1.y + p2.y)
 #pragma castor ensures result == (p1.y + p2.y) / 2
 #pragma castor no_write
-#pragma castor no_free
 int midpoint_y(struct Point p1, struct Point p2)
 {
 	return (p1.y + p2.y) / 2;
@@ -45,7 +41,6 @@ int midpoint_y(struct Point p1, struct Point p2)
 
 #pragma castor ensures p.y == 1
 #pragma castor writes p.y
-#pragma castor no_free
 void ptr_set(struct Point p)
 {
 	int *y_ptr = &(p.y);
@@ -58,7 +53,6 @@ void ptr_set(struct Point p)
 #pragma castor ensures mid->x == (p1.x + p2.x) / 2
 #pragma castor ensures mid->y == (p1.y + p2.y) / 2
 #pragma castor writes mid->x, mid->y
-#pragma castor no_free
 void midpoint(struct Point p1, struct Point p2, struct Point *mid)
 {
 	(*mid).x = (p1.x + p2.x) / 2;

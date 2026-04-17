@@ -9,7 +9,6 @@ struct HasPair
 	int b;
 
 	#pragma castor no_write
-	#pragma castor no_free
 	HasPair() { }
 };
 
@@ -27,7 +26,6 @@ public:
 	#pragma castor ensures this->b      == 2
 	#pragma castor ensures this->a[0]   == 3
 	#pragma castor ensures this->a[1]   == 4
-	#pragma castor no_free
 	#pragma castor writes *this
 	HasMembers()
 	{
@@ -51,7 +49,6 @@ public:
 	#pragma castor ensures this->a.b == 1
 	#pragma castor ensures this->b.a == 2
 	#pragma castor ensures this->b.b == 3
-	#pragma castor no_free
 	#pragma castor writes *this
 	HasMembers2()
 	{

@@ -20,7 +20,6 @@ void modify_through_const_ptr()
 
 #pragma castor invariant valid(x)
 #pragma castor no_write
-#pragma castor no_free
 void accepts_const_int_ptr(const int* x) { }
 
 void gives_const_int_ptr()
@@ -35,7 +34,6 @@ void gives_const_int_ptr()
 
 #pragma castor requires x == 5
 #pragma castor no_write
-#pragma castor no_free
 void accepts_const_reference(const int& x) { }
 
 void gives_const_reference()

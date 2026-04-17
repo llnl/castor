@@ -14,7 +14,6 @@ public:
 	#pragma castor ensures this->x == a
 	#pragma castor ensures this->y == b
 	#pragma castor writes this->x, this->y
-	#pragma castor no_free
 	Int2(int a, int b)
 	{
 		this->x = a;
@@ -24,7 +23,6 @@ public:
 	#pragma castor invariant valid(this)
 	#pragma castor ensures result == checked(this->x * second.x + this->y * second.y)
 	#pragma castor no_write
-	#pragma castor no_free
 	int operator*(Int2 second)
 	{
 		return this->x * second.x + this->y * second.y;

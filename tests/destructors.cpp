@@ -9,7 +9,6 @@ class Foo
 {
 public:
 	#pragma castor invariant valid(this)
-	#pragma castor no_free
 	#pragma castor writes global
 	#pragma castor ensures global == 5
 	Foo()
@@ -18,7 +17,6 @@ public:
 	}
 
 	#pragma castor invariant valid(this)
-	#pragma castor no_free
 	#pragma castor writes global
 	#pragma castor ensures global == 7
 	~Foo()

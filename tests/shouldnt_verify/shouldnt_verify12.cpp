@@ -4,7 +4,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #pragma castor writes arr[0 .. len - 1]
-#pragma castor no_free
 #pragma castor invariant valid_array(arr, len)
 #pragma castor requires len > 0
 #pragma castor ensures forall sint32: i. 0 <= i /\ i < len => arr[i] == checked(old(arr[i]) + 1)
@@ -17,7 +16,6 @@ void add_one(int *arr, int len)
 	#pragma castor invariant 0 <= i /\ i <= len
 	#pragma castor invariant arr == old(arr) /\ len == old(len)
 	#pragma castor writes arr[0 .. len - 1], i
-	#pragma castor no_free
 	for (int i = 0; i < len; i += 1)
 	{
 		arr[i] += 1;

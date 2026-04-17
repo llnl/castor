@@ -10,7 +10,6 @@ struct Point
 
 	#pragma castor invariant valid(this)
 	#pragma castor no_write
-	#pragma castor no_free
 	Point() { }
 };
 
@@ -21,7 +20,6 @@ struct PointPair
 
 	#pragma castor invariant valid(this)
 	#pragma castor no_write
-	#pragma castor no_free
 	PointPair() { }
 };
 
@@ -32,7 +30,6 @@ struct PointPair
 #pragma castor ensures mid->y == (p1.y + p2.y) / 2
 #pragma castor ensures false
 #pragma castor writes mid->x, mid->y
-#pragma castor no_free
 void midpoint(struct Point p1, struct Point p2, struct Point *mid)
 {
 	(*mid).x = (p1.x + p2.x) / 2;

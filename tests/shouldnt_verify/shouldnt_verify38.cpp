@@ -9,7 +9,6 @@ struct Foo
 	int b;
 
 	#pragma castor invariant valid(this)
-	#pragma castor no_free
 	#pragma castor writes this->a, this->b
 	#pragma castor ensures this->a == a /\ this->b == b
 	Foo(int a, int b) : a(a), b(b) { }

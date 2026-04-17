@@ -66,7 +66,6 @@ int test4()
 	#pragma castor invariant 0 <= i /\ i <= 5
 	#pragma castor variant 10 - i
 	#pragma castor writes i, ctr
-	#pragma castor no_free
 	for (int i = 0; i < 10; i += 1)
 	{
 		ctr += 1;

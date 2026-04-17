@@ -12,13 +12,11 @@ public:
 	#pragma castor invariant valid(this)
 	#pragma castor ensures this->x == x
 	#pragma castor writes this->x
-	#pragma castor no_free
 	Foo(int x) : x(x) { }
 
 	#pragma castor invariant valid(this)
 	#pragma castor ensures this->x == x
 	#pragma castor writes this->x
-	#pragma castor no_free
 	void set_x(int x) const
 	{
 		const_cast<Foo*>(this)->x = x;

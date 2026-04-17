@@ -8,12 +8,10 @@ class Foo
 public:
 	#pragma castor invariant valid(this)
 	#pragma castor no_write
-	#pragma castor no_free
 	Foo() { }
 
 	#pragma castor invariant valid(this)
 	#pragma castor no_write
-	#pragma castor no_free
 	void do_nothing() { }
 };
 

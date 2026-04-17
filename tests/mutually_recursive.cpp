@@ -6,7 +6,6 @@
 int foo(int x);
 
 #pragma castor no_write
-#pragma castor no_free
 #pragma castor requires x >= 0
 #pragma castor ensures result == x
 #pragma castor variant x
@@ -16,7 +15,6 @@ int bar(int x)
 }
 
 #pragma castor no_write
-#pragma castor no_free
 #pragma castor requires x >= 0
 #pragma castor ensures result == x
 #pragma castor variant x

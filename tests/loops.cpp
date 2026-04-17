@@ -13,7 +13,6 @@ int for_loop()
 	#pragma castor invariant running_total == (i * (i - 1)) / 2
 	#pragma castor invariant 1 <= i /\ i <= 11
 	#pragma castor writes i, running_total
-	#pragma castor no_free
 	for (int i = 1; i <= 10; i += 1)
 	{
 		running_total += i;
@@ -32,7 +31,6 @@ int for_loop_continue()
 	#pragma castor invariant running_total == (i * (i - 1)) / 2
 	#pragma castor invariant 1 <= i /\ i <= 11
 	#pragma castor writes i, running_total
-	#pragma castor no_free
 	for (int i = 1; i <= 10; i += 1)
 	{
 		running_total += i;
@@ -52,7 +50,6 @@ int for_loop_double_initializer()
 	#pragma castor invariant running_total == (i * (i - 1)) / 2
 	#pragma castor invariant 1 <= i /\ i <= 11
 	#pragma castor writes i, running_total, condition
-	#pragma castor no_free
 	for (int i = 1; bool condition = i <= 10; i += 1)
 	{
 		running_total += i;
@@ -73,7 +70,6 @@ int while_loop()
 	#pragma castor invariant running_total == (i * (i - 1)) / 2
 	#pragma castor invariant 1 <= i /\ i <= 11
 	#pragma castor writes i, running_total
-	#pragma castor no_free
 	while (i <= 10)
 	{
 		running_total += i;
@@ -94,7 +90,6 @@ int while_loop_initializer()
 	#pragma castor invariant running_total == (i * (i - 1)) / 2
 	#pragma castor invariant 1 <= i /\ i <= 11
 	#pragma castor writes i, running_total, condition
-	#pragma castor no_free
 	while (bool condition = i <= 10)
 	{
 		running_total += i;
@@ -116,7 +111,6 @@ int do_while_loop()
 	#pragma castor invariant running_total == (i * (i - 1)) / 2
 	#pragma castor invariant 1 <= i /\ i <= 11
 	#pragma castor writes i, running_total
-	#pragma castor no_free
 	do
 	{
 		running_total += i;

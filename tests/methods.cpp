@@ -14,7 +14,6 @@ public:
 	#pragma castor ensures this->x == x
 	#pragma castor ensures this->y == y
 	#pragma castor writes this->x, this->y
-	#pragma castor no_free
 	Point(int x, int y)
 	{
 		this->x = x;
@@ -25,7 +24,6 @@ public:
 	#pragma castor requires min_sint32 <= this->x + this->y /\ this->x + this->y <= max_sint32
 	#pragma castor ensures result == this->x + this->y
 	#pragma castor no_write
-	#pragma castor no_free
 	int manhattan_distance()
 	{
 		return x + y;
@@ -42,7 +40,6 @@ public:
 	#pragma castor invariant valid(this)
 	#pragma castor ensures this->value == value
 	#pragma castor writes this->value
-	#pragma castor no_free
 	Adder(T value)
 	{
 		this->value = value;
@@ -52,7 +49,6 @@ public:
 	#pragma castor requires min_int(T) <= this->value + value /\ this->value + value <= max_int(T)
 	#pragma castor ensures this->value == old(this->value) + value
 	#pragma castor writes this->value
-	#pragma castor no_free
 	void add_to(T value)
 	{
 		this->value += value;
@@ -61,7 +57,6 @@ public:
 	#pragma castor invariant valid(this)
 	#pragma castor ensures result == this->value
 	#pragma castor no_write
-	#pragma castor no_free
 	T get_val()
 	{
 		return value;

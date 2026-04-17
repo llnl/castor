@@ -19,7 +19,6 @@ void copy()
 
 #pragma castor ensures x == checked(old(x) + 1)
 #pragma castor writes x
-#pragma castor no_free
 void called(int& x)
 {
 	x += 1;
@@ -27,7 +26,6 @@ void called(int& x)
 
 #pragma castor ensures x == checked(old(x) + 1)
 #pragma castor writes x
-#pragma castor no_free
 void not_ref_called(int x)
 {
 	x += 1;
@@ -61,7 +59,6 @@ public:
 	#pragma castor invariant valid(this)
 	#pragma castor ensures this->x == y
 	#pragma castor writes this->x
-	#pragma castor no_free
 	RefAccess(int y)
 	{
 		this->x = y;
@@ -69,7 +66,6 @@ public:
 
 	#pragma castor invariant valid(this)
 	#pragma castor ensures alias_of(result, this->x)
-	#pragma castor no_free
 	#pragma castor no_write
 	int& get()
 	{
@@ -78,7 +74,6 @@ public:
 
 	#pragma castor invariant valid(this)
 	#pragma castor ensures result == this->x
-	#pragma castor no_free
 	#pragma castor no_write
 	int get_noref()
 	{
@@ -104,7 +99,6 @@ int global;
 
 #pragma castor ensures alias_of(result, global)
 #pragma castor no_write
-#pragma castor no_free
 IntRef global_getter() { return global; }
 
 #pragma castor ensures a == old(b) /\ b == old(a)

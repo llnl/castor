@@ -12,12 +12,10 @@ private:
 public:
 	#pragma castor invariant valid(this)
 	#pragma castor no_write
-	#pragma castor no_free
 	Foo() = default;
 	
 	#pragma castor invariant valid(this)
 	#pragma castor writes this->x, this->y
-	#pragma castor no_free
 	#pragma castor ensures this->x == a
 	#pragma castor ensures this->y == b
 	Foo(int a, int b)
@@ -35,11 +33,9 @@ private:
 public:
 	#pragma castor invariant valid(this)
 	#pragma castor no_write
-	#pragma castor no_free
 	Bar() = default;
 
 	#pragma castor invariant valid(this)
-	#pragma castor no_free
 	#pragma castor writes this->x
 	#pragma castor ensures this->x.x == a
 	#pragma castor ensures this->x.y == b

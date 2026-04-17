@@ -10,13 +10,11 @@ class Foo
 public:
 	#pragma castor invariant valid(this)
 	#pragma castor writes this->x
-	#pragma castor no_free
 	#pragma castor ensures this->x == 0
 	Foo() : x(0) { }
 
 	#pragma castor invariant valid(this)
 	#pragma castor writes this->x
-	#pragma castor no_free
 	#pragma castor ensures this->x == a
 	Foo(int a) : x(a) { }
 };
@@ -28,19 +26,16 @@ class Bar
 public:
 	#pragma castor invariant valid(this)
 	#pragma castor writes this->x
-	#pragma castor no_free
 	#pragma castor ensures this->x == 0
 	Bar() : x(0) { }
 
 	#pragma castor invariant valid(this)
 	#pragma castor writes this->x
-	#pragma castor no_free
 	#pragma castor ensures this->x == a
 	Bar(int a) : x(a) { }
 
 	#pragma castor invariant valid(this)
 	#pragma castor no_write
-	#pragma castor no_free
 	#pragma castor ensures result.x == checked(this->x + 1)
 	explicit operator Foo()
 	{

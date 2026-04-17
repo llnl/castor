@@ -27,7 +27,6 @@ void adder_simple(DATA x)
 }
 
 #pragma castor writes *x
-#pragma castor no_free
 #pragma castor invariant valid(x)
 #pragma castor requires *x < max_uint32 - 1
 #pragma castor requires is_uint32(*x)

@@ -9,7 +9,6 @@ namespace Foo
 
 	#pragma castor ensures x == checked(old(x) + 1)
 	#pragma castor writes x
-	#pragma castor no_free
 	void add(int& x)
 	{
 		x += 1;
@@ -21,7 +20,6 @@ namespace Foo
 
 		#pragma castor ensures x == checked(old(x) - 1)
 		#pragma castor writes x
-		#pragma castor no_free
 		void sub(int& x)
 		{
 			x -= 1;

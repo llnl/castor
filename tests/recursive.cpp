@@ -9,7 +9,6 @@
 #pragma castor ensures result == n * (n + 1) / 2
 #pragma castor ensures is_uint16(result)
 #pragma castor no_write
-#pragma castor no_free
 int sum(int n)
 {
 	if (n == 0)

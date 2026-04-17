@@ -10,7 +10,6 @@ struct Point
 
 	#pragma castor invariant valid(this)
 	#pragma castor no_write
-	#pragma castor no_free
 	Point() { }
 };
 
@@ -21,7 +20,6 @@ struct PointPair
 
 	#pragma castor invariant valid(this)
 	#pragma castor no_write
-	#pragma castor no_free
 	PointPair() { }
 };
 

@@ -20,7 +20,6 @@ void call_check_x()
 
 #pragma castor ensures x == checked(old(x) + 1)
 #pragma castor writes x
-#pragma castor no_free
 void incr()
 {
 	x += 1;

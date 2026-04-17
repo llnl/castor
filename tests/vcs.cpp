@@ -6,7 +6,6 @@
 #pragma castor invariant valid(a, b, c) /\ separated(a, b, c)
 #pragma castor ensures *a == old(*b) /\ *b == old(*c) /\ *c == old(*a)
 #pragma castor writes *a, *b, *c
-#pragma castor no_free
 void swap_3(int *a, int *b, int *c)
 {
 	int temp = *a;
@@ -18,7 +17,6 @@ void swap_3(int *a, int *b, int *c)
 #pragma castor invariant valid(a, *a, b, *b) /\ separated(a, *a, b, *b)
 #pragma castor ensures **a == checked(old(**a) + **b)
 #pragma castor writes **a
-#pragma castor no_free
 void add_1(int **a, int **b)
 {
 	**a += **b;
@@ -27,7 +25,6 @@ void add_1(int **a, int **b)
 #pragma castor invariant valid(a, *a, b, *b) /\ separated(a, *a, b, *b)
 #pragma castor ensures **a == checked(old(**a) * **b)
 #pragma castor writes **a
-#pragma castor no_free
 void mul(int **a, int **b)
 {
 	**a *= **b;

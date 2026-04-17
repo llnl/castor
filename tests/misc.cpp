@@ -71,13 +71,11 @@ struct Foo
 {
 public:
 	#pragma castor invariant valid(this)
-	#pragma castor no_free
 	#pragma castor no_write
 	Foo() { }
 
 	#pragma castor invariant valid(this)
 	#pragma castor ensures alias_of(result, *this)
-	#pragma castor no_free
 	#pragma castor no_write
 	Foo& do_nothing(int x)
 	{
